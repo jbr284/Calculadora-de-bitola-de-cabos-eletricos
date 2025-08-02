@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Circuitos Elétricos</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --primary-hover-color: #0b5ed7;
+      --success-color: #198754;
+      --danger-color: #dc3545;
+      --light-gray: #f8f9fa;
+      --medium-gray: #e9ecef;
+      --border-color: #dee2e6;
+      --dark-text: #212529;
+      --light-text: #6c757d;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--medium-gray);
+      color: var(--dark-text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #app {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--dark-text);
+      font-weight: 800;
+      font-size: 2.2em;
+      letter-spacing: -1px;
+    }
+    
+    h2 {
+      text-align: center;
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 1.8em;
+      border-bottom: 2px solid var(--medium-gray);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    #main-form {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .form-section {
+      padding: 25px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: var(--light-text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input[type="number"], .form-group input[type="text"], .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 1em;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+
+    .input-group { display: flex; gap: 15px; align-items: flex-end; }
+    .input-group > div { flex: 1; }
+    .radio-group-power { display: flex; align-items: center; gap: 15px; padding-bottom: 12px; padding-left: 5px; }
+    .radio-group-power label { margin-bottom: 0; font-weight: normal; text-transform: none; color: var(--dark-text); }
+    .radio-group-power input[type="radio"] { margin-right: 5px; transform: scale(1.1); }
+    
+    .radio-group-horizontal {
+        display: flex;
+        justify-content: flex-start;
+        gap: 30px;
+        align-items: center;
+        background-color: var(--light-gray);
+        padding: 15px;
+        border-radius: 6px;
+    }
+    .radio-group-horizontal label {
+        font-weight: 600;
+        font-size: 1em;
+        margin-left: 8px;
+        cursor: pointer;
+        color: var(--dark-text);
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .radio-group-horizontal div {
+        display: flex;
+        align-items: center;
+    }
+    .radio-group-horizontal input[type="radio"] {
+        transform: scale(1.2);
+    }
+
+    #power-factor-group .info-icon {
+      cursor: pointer;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+    #power-factor-tooltip {
+      display: none; position: absolute; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100; max-width: 300px;
+    }
+    #power-factor-tooltip h4 { margin-top: 0; font-weight: 700; }
+    #power-factor-tooltip ul { padding-left: 20px; margin-bottom: 0; }
+    
+    .calculate-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2em;
+      font-weight: 700;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .calculate-btn:hover { background-color: var(--primary-hover-color); }
+    
+    #results-panel {
+      margin-top: 30px;
+      padding: 25px;
+      background-color: var(--light-gray);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result-item { text-align: center; margin-bottom: 25px; }
+    .result-item-label { font-weight: 600; color: var(--light-text); text-transform: uppercase; font-size: 0.9em; letter-spacing: 0.5px; }
+    .result-item-value { font-size: 3em; font-weight: 800; line-height: 1.1; }
+    .result-item-value.breaker { color: var(--primary-color); }
+    .result-item-value.cable { color: var(--success-color); }
+    
+    .justification { font-style: italic; text-align: center; margin: 25px auto; max-width: 80%; line-height: 1.6; }
+    
+    #context-table { width: 100%; border-collapse: collapse; }
+    #context-table th, #context-table td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
+    #context-table th { background-color: #e9ecef; font-weight: 600; text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.5px; }
+    #context-table .recommended-row { background-color: #d1e7dd; font-weight: 700; }
+    #context-table .recommended-row td:first-child::before { content: '✅ '; }
+    
+    /* ** INÍCIO DO NOVO BLOCO DE RESPONSIVIDADE ** */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      #app {
+        padding: 15px;
+        margin: 10px auto;
+      }
+      
+      h1 {
+        font-size: 1.8em;
+      }
+      
+      h2 {
+        font-size: 1.5em;
+      }
+      
+      .form-section {
+        padding: 15px;
+      }
+      
+      .form-group input[type="number"], 
+      .form-group input[type="text"], 
+      .form-group select,
+      .calculate-btn {
+        padding: 14px;
+        font-size: 16px; /* Evita zoom automático no iOS */
+      }
+      
+      .input-group {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+      }
+      
+      .radio-group-horizontal {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .result-item-value {
+        font-size: 2.5em;
+      }
+    }
+    /* ** FIM DO NOVO BLOCO DE RESPONSIVIDADE ** */
+
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <h1>Calculadora de Circuitos Elétricos</h1>
+    <form id="main-form" onsubmit="return false;">
+
+      <div class="form-section">
+        <div class="form-group">
+            <label>Modo de Cálculo</label>
+            <div class="radio-group-horizontal">
+                <div>
+                    <input type="radio" id="by-power" name="load_type" value="power" checked>
+                    <label for="by-power">Calcular pela Potência</label>
+                </div>
+                <div>
+                    <input type="radio" id="by-current" name="load_type" value="current">
+                    <label for="by-current">Calcular com a Corrente</label>
+                </div>
+            </div>
+        </div>
+
+        <div id="power-inputs">
+          <div class="form-group">
+            <label for="power">Potência Total</label>
+            <div class="input-group">
+              <input type="number" id="power" placeholder="Ex: 5 ou 5000" step="any">
+              <div class="radio-group-power">
+                <input type="radio" id="unit-w" name="power_unit" value="W" checked>
+                <label for="unit-w">W</label>
+                <input type="radio" id="unit-kw" name="power_unit" value="kW">
+                <label for="unit-kw">kW</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" id="power-factor-group">
+            <label for="power-factor">Fator de Potência (cos φ) <span id="pf-info-icon" class="info-icon">?</span></label>
+            <input type="text" id="power-factor" value="0.92">
+            <div id="power-factor-tooltip">
+                <h4>Fator de Potência Típico</h4>
+                <ul>
+                    <li>Motores (plena carga): <strong>0.85</strong></li>
+                    <li>Cargas Resistivas (chuveiros): <strong>1.00</strong></li>
+                    <li>Iluminação LED (boa qualidade): <strong>> 0.92</strong></li>
+                    <li>Eletrônicos (PFC Ativo): <strong>> 0.95</strong></li>
+                </ul>
+                <small>Na dúvida, use 0.92 para cargas mistas.</small>
+            </div>
+          </div>
+        </div>
+
+        <div id="current-inputs" style="display: none;">
+          <div class="form-group">
+            <label for="current">Corrente de Projeto (A)</label>
+            <input type="text" id="current" placeholder="Ex: 22.7">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-group input-group">
+          <div>
+            <label for="voltage">Tensão (V)</label>
+            <select id="voltage">
+              <option value="127">127 V</option>
+              <option value="220">220 V</option>
+              <option value="380">380 V</option>
+            </select>
+          </div>
+          <div>
+            <label for="circuit-type">Tipo de Circuito</label>
+            <select id="circuit-type">
+              <option value="mono">Monofásico</option>
+              <option value="tri">Trifásico</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+            <label for="length">Comprimento do Cabo (m)</label>
+            <input type="text" id="length" placeholder="Ex: 25">
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <div class="form-group">
+          <label for="install-method">Método de Instalação (NBR 5410)</label>
+          <select id="install-method">
+            <option value="A2">A2 - Cabo sobre parede/isoladores</option>
+            <option value="B1" selected>B1 - Eletroduto embutido em alvenaria</option>
+            <option value="B2">B2 - Eletroduto aparente (superfície)</option>
+            <option value="C">C - Eletrocalha ou bandeja perfurada</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" id="calculate-btn" class="calculate-btn">Calcular</button>
+    </form>
+
+    <div id="results-panel">
+        <h2>Resultado do Dimensionamento</h2>
+        <div class="result-item">
+            <div class="result-item-label">Disjuntor Recomendado</div>
+            <div id="breaker-result" class="result-item-value breaker"></div>
+        </div>
+        <div class="result-item">
+            <div class="result-item-label">Seção do Cabo Recomendada</div>
+            <div id="cable-result" class="result-item-value cable"></div>
+        </div>
+        <p id="justification" class="justification"></p>
+        <table id="context-table">
+            <thead>
+                <tr>
+                    <th>Seção (mm²)</th>
+                    <th>Capacidade (Iz)*</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="context-table-body"></tbody>
+        </table>
+        <small id="results-footer" style="text-align: center; display: block; margin-top: 10px;"></small>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- BANCO DE DADOS (DADOS DA NORMA - **PROTÓTIPO**) ---
+      const commercialCables = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70];
+      const commercialBreakers = [10, 16, 20, 25, 32, 40, 50, 63, 70];
+      
+      const cableCapacityTable = {
+        'A2': { '1.5': 21, '2.5': 28, '4': 37, '6': 48, '10': 68, '16': 92, '25': 122, '35': 151, '50': 188, '70': 240 },
+        'B1': { '1.5': 17.5, '2.5': 24, '4': 32, '6': 41, '10': 57, '16': 76, '25': 101, '35': 125, '50': 151, '70': 192 },
+        'B2': { '1.5': 19.5, '2.5': 27, '4': 36, '6': 46, '10': 64, '16': 85, '25': 112, '35': 138, '50': 172, '70': 217 },
+        'C':  { '1.5': 22, '2.5': 30, '4': 40, '6': 52, '10': 73, '16': 98, '25': 131, '35': 162, '50': 201, '70': 255 }
+      };
+
+      // --- ELEMENTOS DO DOM ---
+      const calculateBtn = document.getElementById('calculate-btn');
+      const resultsPanel = document.getElementById('results-panel');
+      const loadTypeRadios = document.querySelectorAll('input[name="load_type"]');
+      const powerInputs = document.getElementById('power-inputs');
+      const currentInputs = document.getElementById('current-inputs');
+      const pfInfoIcon = document.getElementById('pf-info-icon');
+      const pfTooltip = document.getElementById('power-factor-tooltip');
+
+      // --- LÓGICA DA INTERFACE (UI) ---
+      loadTypeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          if (e.target.value === 'power') {
+            powerInputs.style.display = 'block';
+            currentInputs.style.display = 'none';
+          } else {
+            powerInputs.style.display = 'none';
+            currentInputs.style.display = 'block';
+          }
+        });
+      });
+
+      pfInfoIcon.addEventListener('mouseenter', () => pfTooltip.style.display = 'block');
+      pfInfoIcon.addEventListener('mouseleave', () => pfTooltip.style.display = 'none');
+
+      // --- LÓGICA DE CÁLCULO ---
+      calculateBtn.addEventListener('click', () => {
+        
+        const getNumericValue = (elementId) => {
+            const el = document.getElementById(elementId);
+            if (!el) return NaN;
+            const valueStr = el.value.replace(',', '.');
+            return parseFloat(valueStr);
+        };
+
+        const loadType = document.querySelector('input[name="load_type"]:checked').value;
+        let power = getNumericValue('power');
+        const pf = getNumericValue('power-factor');
+        const current = getNumericValue('current');
+        const length = getNumericValue('length');
+        
+        const voltage = parseInt(document.getElementById('voltage').value);
+        const circuitType = document.getElementById('circuit-type').value;
+        const installMethod = document.getElementById('install-method').value;
+
+        if (isNaN(length) || length <= 0) {
+            alert("Por favor, insira um comprimento de cabo válido.");
+            return;
+        }
+
+        let designCurrent;
+        if (loadType === 'power') {
+          const powerUnit = document.querySelector('input[name="power_unit"]:checked').value;
+          if (powerUnit === 'kW') {
+            power *= 1000;
+          }
+
+          if (isNaN(power) || power <= 0 || isNaN(pf) || pf <= 0 || pf > 1) {
+            alert("Por favor, insira valores de potência e fator de potência válidos.");
+            return;
+          }
+          if (circuitType === 'mono') {
+            designCurrent = power / (voltage * pf);
+          } else {
+            designCurrent = power / (voltage * pf * Math.sqrt(3));
+          }
+        } else {
+          if (isNaN(current) || current <= 0) {
+            alert("Por favor, insira uma corrente válida.");
+            return;
+          }
+          designCurrent = current;
+        }
+        
+        let recommendedBreaker = null;
+        for (const breaker of commercialBreakers) {
+            if (breaker >= designCurrent) {
+                recommendedBreaker = breaker;
+                break;
+            }
+        }
+        if (!recommendedBreaker) {
+            alert("Nenhum disjuntor comercial padrão suporta a corrente de projeto informada.");
+            return;
+        }
+
+        let cableForBreaker = null;
+        for (const size of commercialCables) {
+          const capacity = cableCapacityTable[installMethod]?.[size.toString()];
+          if (capacity && capacity >= recommendedBreaker) {
+            cableForBreaker = size;
+            break;
+          }
+        }
+        if (!cableForBreaker) {
+            alert(`Nenhum cabo comercial suporta a corrente do disjuntor necessário (${recommendedBreaker}A) para este método de instalação.`);
+            return;
+        }
+
+        const MAX_VOLTAGE_DROP = 4;
+        const COPPER_RESISTIVITY = 0.0178;
+        let cableForVoltageDrop = null;
+        let finalVoltageDrop = 0;
+        for (const size of commercialCables) {
+            let voltageDrop;
+            if (circuitType === 'mono') {
+                voltageDrop = (200 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage);
+            } else {
+                voltageDrop = (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage);
+            }
+
+            if (voltageDrop <= MAX_VOLTAGE_DROP) {
+                cableForVoltageDrop = size;
+                const finalCableCheckSize = Math.max(cableForBreaker, cableForVoltageDrop);
+                if (circuitType === 'mono') {
+                   finalVoltageDrop = (200 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage);
+                } else {
+                   finalVoltageDrop = (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage);
+                }
+                break;
+            }
+        }
+         if (!cableForVoltageDrop) {
+            alert("Nenhum cabo comercial atende ao critério de queda de tensão. Verifique o comprimento ou a carga.");
+            return;
+        }
+        
+        const finalCableSize = Math.max(cableForBreaker, cableForVoltageDrop);
+        const finalCableCapacity = cableCapacityTable[installMethod][finalCableSize.toString()];
+        
+        document.getElementById('breaker-result').textContent = `${recommendedBreaker} A`;
+        document.getElementById('cable-result').textContent = `${finalCableSize} mm²`;
+        document.getElementById('justification').textContent = `Justificativa: Corrente de projeto de ${designCurrent.toFixed(2)}A e queda de tensão de ${finalVoltageDrop.toFixed(2)}%. O disjuntor de ${recommendedBreaker}A protege o circuito (In ≥ Ib). O cabo de ${finalCableSize}mm² suporta até ${finalCableCapacity}A nestas condições, sendo protegido pelo disjuntor (In ≤ Iz).`;
+
+        const tableBody = document.getElementById('context-table-body');
+        tableBody.innerHTML = '';
+        const installMethodDescription = document.querySelector(`#install-method option[value="${installMethod}"]`).textContent;
+        document.getElementById('results-footer').textContent = `*Capacidade de corrente para o método ${installMethodDescription}.`;
+
+        commercialCables.forEach(size => {
+            const capacity = cableCapacityTable[installMethod]?.[size.toString()] || 'N/A';
+            const row = document.createElement('tr');
+            if (size === finalCableSize) {
+                row.classList.add('recommended-row');
+            }
+            row.innerHTML = `
+                <td>${size} mm²</td>
+                <td>${capacity} A</td>
+                <td>${size === finalCableSize ? '✅ Recomendado' : ''}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        resultsPanel.style.display = 'block';
+      });
+
+      // --- INICIALIZAÇÃO PWA ---
+      window.onload = () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Service Worker registrado com sucesso."))
+            .catch(err => console.error("Erro ao registrar o Service Worker:", err));
+        }
+      };
+    });
+  </script>
+</body>
+</html>
