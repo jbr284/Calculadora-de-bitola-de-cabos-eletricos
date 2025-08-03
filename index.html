@@ -144,17 +144,6 @@
     .radio-group-horizontal input[type="radio"] {
         transform: scale(1.2);
     }
-
-    #power-factor-group .info-icon {
-      cursor: pointer;
-      color: var(--primary-color);
-      font-weight: bold;
-    }
-    #power-factor-tooltip {
-      display: none; position: absolute; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100; max-width: 300px;
-    }
-    #power-factor-tooltip h4 { margin-top: 0; font-weight: 700; }
-    #power-factor-tooltip ul { padding-left: 20px; margin-bottom: 0; }
     
     .calculate-btn {
       width: 100%;
@@ -193,55 +182,20 @@
     #context-table .recommended-row { background-color: #d1e7dd; font-weight: 700; }
     #context-table .recommended-row td:first-child::before { content: '✅ '; }
     
-    /* ** INÍCIO DO NOVO BLOCO DE RESPONSIVIDADE ** */
     @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-      
-      #app {
-        padding: 15px;
-        margin: 10px auto;
-      }
-      
-      h1 {
-        font-size: 1.8em;
-      }
-      
-      h2 {
-        font-size: 1.5em;
-      }
-      
-      .form-section {
-        padding: 15px;
-      }
-      
-      .form-group input[type="number"], 
-      .form-group input[type="text"], 
-      .form-group select,
-      .calculate-btn {
+      body { padding: 10px; }
+      #app { padding: 15px; margin: 10px auto; }
+      h1 { font-size: 1.8em; }
+      h2 { font-size: 1.5em; }
+      .form-section { padding: 15px; }
+      .form-group input[type="number"], .form-group input[type="text"], .form-group select, .calculate-btn {
         padding: 14px;
-        font-size: 16px; /* Evita zoom automático no iOS */
+        font-size: 16px;
       }
-      
-      .input-group {
-        flex-direction: column;
-        gap: 20px;
-        align-items: stretch;
-      }
-      
-      .radio-group-horizontal {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-      }
-      
-      .result-item-value {
-        font-size: 2.5em;
-      }
+      .input-group { flex-direction: column; gap: 20px; align-items: stretch; }
+      .radio-group-horizontal { flex-direction: column; align-items: flex-start; gap: 15px; }
+      .result-item-value { font-size: 2.5em; }
     }
-    /* ** FIM DO NOVO BLOCO DE RESPONSIVIDADE ** */
-
   </style>
 </head>
 <body>
@@ -279,20 +233,19 @@
             </div>
           </div>
           <div class="form-group" id="power-factor-group">
-            <label for="power-factor">Fator de Potência (cos φ) <span id="pf-info-icon" class="info-icon">?</span></label>
-            <input type="text" id="power-factor" value="0.92">
-            <div id="power-factor-tooltip">
-                <h4>Fator de Potência Típico</h4>
-                <ul>
-                    <li>Motores (plena carga): <strong>0.85</strong></li>
-                    <li>Cargas Resistivas (chuveiros): <strong>1.00</strong></li>
-                    <li>Iluminação LED (boa qualidade): <strong>> 0.92</strong></li>
-                    <li>Eletrônicos (PFC Ativo): <strong>> 0.95</strong></li>
-                </ul>
-                <small>Na dúvida, use 0.92 para cargas mistas.</small>
-            </div>
+            <label for="power-factor">Fator de Potência (cos φ)</label>
+            <select id="power-factor">
+                <option value="" disabled selected>Selecione um valor...</option>
+                <option value="1.00">1.00 - Cargas Resistivas (chuveiro, aquecedor)</option>
+                <option value="0.98">0.98 - Iluminação Fluorescente (reator eletrônico)</option>
+                <option value="0.95">0.95 - Eletrônicos com PFC Ativo (PCs, TVs)</option>
+                <option value="0.92">0.92 - Padrão para Cargas Mistas / Motores</option>
+                <option value="0.85">0.85 - Motores em plena carga</option>
+                <option value="0.70">0.70 - Motores com 50% de carga</option>
+                <option value="0.60">0.60 - Eletrônicos antigos / Fontes simples</option>
+            </select>
           </div>
-        </div>
+          </div>
 
         <div id="current-inputs" style="display: none;">
           <div class="form-group">
@@ -369,7 +322,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-      // --- BANCO DE DADOS (DADOS DA NORMA - **PROTÓTIPO**) ---
       const commercialCables = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70];
       const commercialBreakers = [10, 16, 20, 25, 32, 40, 50, 63, 70];
       
@@ -380,16 +332,12 @@
         'C':  { '1.5': 22, '2.5': 30, '4': 40, '6': 52, '10': 73, '16': 98, '25': 131, '35': 162, '50': 201, '70': 255 }
       };
 
-      // --- ELEMENTOS DO DOM ---
       const calculateBtn = document.getElementById('calculate-btn');
       const resultsPanel = document.getElementById('results-panel');
       const loadTypeRadios = document.querySelectorAll('input[name="load_type"]');
       const powerInputs = document.getElementById('power-inputs');
       const currentInputs = document.getElementById('current-inputs');
-      const pfInfoIcon = document.getElementById('pf-info-icon');
-      const pfTooltip = document.getElementById('power-factor-tooltip');
 
-      // --- LÓGICA DA INTERFACE (UI) ---
       loadTypeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
           if (e.target.value === 'power') {
@@ -402,13 +350,18 @@
         });
       });
 
-      pfInfoIcon.addEventListener('mouseenter', () => pfTooltip.style.display = 'block');
-      pfInfoIcon.addEventListener('mouseleave', () => pfTooltip.style.display = 'none');
-
-      // --- LÓGICA DE CÁLCULO ---
       calculateBtn.addEventListener('click', () => {
         
         const getNumericValue = (elementId) => {
+            const el = document.getElementById(elementId);
+            if (!el) return NaN;
+            // Para o select, o value já é o número, não precisa de replace.
+            const valueStr = el.value;
+            return parseFloat(valueStr);
+        };
+        
+        // Função específica para campos de texto que podem ter vírgula
+        const getNumericValueFromText = (elementId) => {
             const el = document.getElementById(elementId);
             if (!el) return NaN;
             const valueStr = el.value.replace(',', '.');
@@ -416,10 +369,10 @@
         };
 
         const loadType = document.querySelector('input[name="load_type"]:checked').value;
-        let power = getNumericValue('power');
-        const pf = getNumericValue('power-factor');
-        const current = getNumericValue('current');
-        const length = getNumericValue('length');
+        let power = getNumericValueFromText('power');
+        const pf = getNumericValue('power-factor'); // Agora é um select
+        const current = getNumericValueFromText('current');
+        const length = getNumericValueFromText('length');
         
         const voltage = parseInt(document.getElementById('voltage').value);
         const circuitType = document.getElementById('circuit-type').value;
@@ -437,10 +390,13 @@
             power *= 1000;
           }
 
-          if (isNaN(power) || power <= 0 || isNaN(pf) || pf <= 0 || pf > 1) {
-            alert("Por favor, insira valores de potência e fator de potência válidos.");
+          // ** INÍCIO DA ALTERAÇÃO NA VALIDAÇÃO **
+          if (isNaN(power) || power <= 0 || isNaN(pf)) { // Checagem de pf="" (NaN) é suficiente
+            alert("Por favor, preencha Potência e selecione um Fator de Potência válido.");
             return;
           }
+          // ** FIM DA ALTERAÇÃO NA VALIDAÇÃO **
+
           if (circuitType === 'mono') {
             designCurrent = power / (voltage * pf);
           } else {
@@ -536,10 +492,9 @@
         resultsPanel.style.display = 'block';
       });
 
-      // --- INICIALIZAÇÃO PWA ---
       window.onload = () => {
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('sw.js')
+          navigator.service-worker.register('sw.js')
             .then(() => console.log("Service Worker registrado com sucesso."))
             .catch(err => console.error("Erro ao registrar o Service Worker:", err));
         }
