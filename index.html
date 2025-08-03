@@ -137,6 +137,31 @@
     .radio-group-power { display: flex; align-items: center; gap: 15px; padding-bottom: 12px; padding-left: 5px; }
     .radio-group-power label { margin-bottom: 0; font-weight: normal; text-transform: none; color: var(--dark-text); }
     .radio-group-power input[type="radio"] { margin-right: 5px; transform: scale(1.1); }
+    .radio-group-horizontal {
+        display: flex;
+        justify-content: flex-start;
+        gap: 30px;
+        align-items: center;
+        background-color: var(--light-gray);
+        padding: 15px;
+        border-radius: 6px;
+    }
+    .radio-group-horizontal label {
+        font-weight: 600;
+        font-size: 1em;
+        margin-left: 8px;
+        cursor: pointer;
+        color: var(--dark-text);
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .radio-group-horizontal div {
+        display: flex;
+        align-items: center;
+    }
+    .radio-group-horizontal input[type="radio"] {
+        transform: scale(1.2);
+    }
     .calculate-btn {
       width: 100%;
       padding: 15px;
@@ -170,6 +195,7 @@
       #app { padding: 15px; margin: 10px auto; }
       .form-group input[type="number"], .form-group input[type="text"], .form-group select, .calculate-btn { font-size: 16px; }
       .input-group { flex-direction: column; gap: 20px; align-items: stretch; }
+      .radio-group-horizontal { flex-direction: column; align-items: flex-start; gap: 15px; }
     }
   </style>
 </head>
@@ -190,15 +216,38 @@
       <form id="form-geral" onsubmit="return false;">
         <div class="form-section">
           <div class="form-group">
-            <label for="power-geral">Potência do Equipamento</label>
-             <div class="input-group">
-              <input type="number" id="power-geral" placeholder="Ex: 2000" step="any">
-              <div class="radio-group-power">
-                  <input type="radio" id="unit-w-geral" name="power_unit_geral" value="W" checked>
-                  <label for="unit-w-geral">W</label>
-                  <input type="radio" id="unit-kw-geral" name="power_unit_geral" value="kW">
-                  <label for="unit-kw-geral">kW</label>
+              <label>Modo de Cálculo</label>
+              <div class="radio-group-horizontal">
+                  <div>
+                      <input type="radio" id="by-power-geral" name="load_type_geral" value="power" checked>
+                      <label for="by-power-geral">Por Potência</label>
+                  </div>
+                  <div>
+                      <input type="radio" id="by-current-geral" name="load_type_geral" value="current">
+                      <label for="by-current-geral">Por Corrente</label>
+                  </div>
               </div>
+          </div>
+
+          <div id="power-inputs-geral">
+            <div class="form-group">
+              <label for="power-geral">Potência do Equipamento</label>
+               <div class="input-group">
+                <input type="number" id="power-geral" placeholder="Ex: 2000" step="any">
+                <div class="radio-group-power">
+                    <input type="radio" id="unit-w-geral" name="power_unit_geral" value="W" checked>
+                    <label for="unit-w-geral">W</label>
+                    <input type="radio" id="unit-kw-geral" name="power_unit_geral" value="kW">
+                    <label for="unit-kw-geral">kW</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="current-inputs-geral" style="display: none;">
+            <div class="form-group">
+              <label for="current-geral">Corrente do Equipamento (A)</label>
+              <input type="text" id="current-geral" placeholder="Ex: 15.7">
             </div>
           </div>
           <div class="form-group input-group">
@@ -229,45 +278,68 @@
 
     <div id="Profissional" class="tab-content">
        <div class="tab-explanation">
-        <strong>Uso Ideal:</strong> Para projetar um <strong>circuito elétrico completo</strong> desde o quadro de distribuição, considerando todas as variáveis da norma.
+        <strong>Uso Ideal:</strong> Para projetar um <strong>circuito elétrico completo</strong> desde o quadro de distribuição.
       </div>
       <form id="form-pro" onsubmit="return false;">
           <div class="form-section">
             <div class="form-group">
-              <label for="power-pro">Potência Total</label>
-              <div class="input-group">
-                <input type="number" id="power-pro" placeholder="Ex: 5 ou 5000" step="any">
-                <div class="radio-group-power">
-                  <input type="radio" id="unit-w-pro" name="power_unit_pro" value="W" checked>
-                  <label for="unit-w-pro">W</label>
-                  <input type="radio" id="unit-kw-pro" name="power_unit_pro" value="kW">
-                  <label for="unit-kw-pro">kW</label>
+                <label>Modo de Cálculo</label>
+                <div class="radio-group-horizontal">
+                    <div>
+                        <input type="radio" id="by-power-pro" name="load_type_pro" value="power" checked>
+                        <label for="by-power-pro">Calcular pela Potência</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="by-current-pro" name="load_type_pro" value="current">
+                        <label for="by-current-pro">Calcular com a Corrente</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="power-inputs-pro">
+              <div class="form-group">
+                <label for="power-pro">Potência Total</label>
+                <div class="input-group">
+                  <input type="number" id="power-pro" placeholder="Ex: 5 ou 5000" step="any">
+                  <div class="radio-group-power">
+                    <input type="radio" id="unit-w-pro" name="power_unit_pro" value="W" checked>
+                    <label for="unit-w-pro">W</label>
+                    <input type="radio" id="unit-kw-pro" name="power_unit_pro" value="kW">
+                    <label for="unit-kw-pro">kW</label>
+                  </div>
                 </div>
               </div>
+              <div class="form-group">
+                <label for="power-factor-pro">Fator de Potência (cos φ)</label>
+                <select id="power-factor-pro">
+                    <option value="" disabled selected>Selecione o tipo de carga...</option>
+                    <optgroup label="Cargas Resistivas">
+                      <option value="1.00">1.00 - Aquecedores, Chuveiros, Lâmpadas Incandescentes</option>
+                    </optgroup>
+                    <optgroup label="Iluminação">
+                      <option value="0.98">0.98 - Lâmpadas Fluorescentes (reator eletrônico)</option>
+                      <option value="0.95">0.95 - Lâmpadas de LED (boa qualidade)</option>
+                      <option value="0.70">0.70 - Lâmpadas Fluorescentes (reator magnético)</option>
+                    </optgroup>
+                    <optgroup label="Motores de Indução">
+                       <option value="0.92">0.92 - Padrão Geral / Cargas Mistas</option>
+                       <option value="0.85">0.85 - Motor em Plena Carga</option>
+                       <option value="0.75">0.75 - Motor com 75% de Carga</option>
+                       <option value="0.65">0.65 - Motor com 50% de Carga</option>
+                    </optgroup>
+                     <optgroup label="Equipamentos Eletrônicos">
+                      <option value="0.95">0.95 - Fontes com PFC Ativo (PCs, TVs modernas)</option>
+                      <option value="0.60">0.60 - Fontes Chaveadas Simples (antigas)</option>
+                    </optgroup>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="power-factor-pro">Fator de Potência (cos φ)</label>
-              <select id="power-factor-pro">
-                  <option value="" disabled selected>Selecione o tipo de carga...</option>
-                  <optgroup label="Cargas Resistivas">
-                    <option value="1.00">1.00 - Aquecedores, Chuveiros, Lâmpadas Incandescentes</option>
-                  </optgroup>
-                  <optgroup label="Iluminação">
-                    <option value="0.98">0.98 - Lâmpadas Fluorescentes (reator eletrônico)</option>
-                    <option value="0.95">0.95 - Lâmpadas de LED (boa qualidade)</option>
-                    <option value="0.70">0.70 - Lâmpadas Fluorescentes (reator magnético)</option>
-                  </optgroup>
-                  <optgroup label="Motores de Indução">
-                     <option value="0.92">0.92 - Padrão Geral / Cargas Mistas</option>
-                     <option value="0.85">0.85 - Motor em Plena Carga</option>
-                     <option value="0.75">0.75 - Motor com 75% de Carga</option>
-                     <option value="0.65">0.65 - Motor com 50% de Carga</option>
-                  </optgroup>
-                   <optgroup label="Equipamentos Eletrônicos">
-                    <option value="0.95">0.95 - Fontes com PFC Ativo (PCs, TVs modernas)</option>
-                    <option value="0.60">0.60 - Fontes Chaveadas Simples (antigas)</option>
-                  </optgroup>
-              </select>
+
+            <div id="current-inputs-pro" style="display: none;">
+              <div class="form-group">
+                <label for="current-pro">Corrente de Projeto (A)</label>
+                <input type="text" id="current-pro" placeholder="Ex: 22.7">
+              </div>
             </div>
           </div>
           <div class="form-section">
@@ -358,6 +430,7 @@
   </div>
   
   <script>
+    // --- LÓGICA DAS ABAS ---
     function openTab(evt, tabName) {
       let i, tabcontent, tablinks;
       tabcontent = document.getElementsByClassName("tab-content");
@@ -379,170 +452,135 @@
     // --- MOTOR DE CÁLCULO E DADOS ---
     const commercialCables = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70];
     const commercialBreakers = [10, 16, 20, 25, 32, 40, 50, 63, 70];
-    
-    // Tabela de Capacidade de Corrente (Iz) - Tabela 36 NBR 5410
     const cableCapacityTable = {
       'A2': { '1.5': 21, '2.5': 28, '4': 37, '6': 48, '10': 68, '16': 92 },
       'B1': { '1.5': 17.5, '2.5': 24, '4': 32, '6': 41, '10': 57, '16': 76 },
       'B2': { '1.5': 19.5, '2.5': 27, '4': 36, '6': 46, '10': 64, '16': 85 },
       'C':  { '1.5': 22, '2.5': 30, '4': 40, '6': 52, '10': 73, '16': 98 }
     };
-    
-    // ** INÍCIO DA ALTERAÇÃO NO JAVASCRIPT **
-    // Tabela de Fator de Correção de Temperatura (FCT) - Tabela 40 NBR 5410 (para PVC 70°C)
-    const tempCorrectionFactors = {
-        '25': 1.05, '30': 1.00, '35': 0.94, '40': 0.87, '45': 0.79
-    };
-    
-    // Tabela de Fator de Correção de Agrupamento (FCA) - Tabela 42 NBR 5410 (para B1)
-    const groupingCorrectionFactors = {
-        '1': 1.00, '2': 0.80, '3': 0.70, '4': 0.65, '5': 0.60
-    };
+    const tempCorrectionFactors = { '25': 1.05, '30': 1.00, '35': 0.94, '40': 0.87, '45': 0.79 };
+    const groupingCorrectionFactors = { '1': 1.00, '2': 0.80, '3': 0.70, '4': 0.65, '5': 0.60 };
     
     function performCalculation(params) {
         let { power, pf, current, length, voltage, circuitType, installMethod, temperature, groupedCircuits } = params;
-
-        if (isNaN(length) || length <= 0) {
-            alert("Por favor, insira um comprimento de cabo válido.");
-            return;
-        }
-
+        if (isNaN(length) || length <= 0) { alert("Por favor, insira um comprimento de cabo válido."); return; }
         let designCurrent;
         if (power !== undefined) {
-          if (isNaN(power) || power <= 0 || isNaN(pf) || pf <= 0) {
-            alert("Por favor, preencha Potência e selecione um Fator de Potência válido.");
-            return;
-          }
-          if (circuitType === 'mono') {
-            designCurrent = power / (voltage * pf);
-          } else {
-            designCurrent = power / (voltage * pf * Math.sqrt(3));
-          }
+          if (isNaN(power) || power <= 0 || isNaN(pf) || pf <= 0) { alert("Por favor, preencha Potência e selecione um Fator de Potência válido."); return; }
+          designCurrent = (circuitType === 'mono') ? (power / (voltage * pf)) : (power / (voltage * pf * Math.sqrt(3)));
         } else {
-          if (isNaN(current) || current <= 0) {
-            alert("Por favor, insira uma corrente válida.");
-            return;
-          }
+          if (isNaN(current) || current <= 0) { alert("Por favor, insira uma corrente válida."); return; }
           designCurrent = current;
         }
-        
-        let recommendedBreaker = null;
-        for (const breaker of commercialBreakers) {
-            if (breaker >= designCurrent) {
-                recommendedBreaker = breaker;
-                break;
-            }
-        }
-        if (!recommendedBreaker) {
-            alert("Nenhuma opção de disjuntor suporta a corrente de projeto.");
-            return;
-        }
-
+        let recommendedBreaker = commercialBreakers.find(b => b >= designCurrent);
+        if (!recommendedBreaker) { alert("Nenhuma opção de disjuntor suporta a corrente de projeto."); return; }
         const fct = tempCorrectionFactors[temperature.toString()] || 1.0;
         const fca = groupingCorrectionFactors[groupedCircuits.toString()] || 1.0;
-
-        let cableForBreaker = null;
-        for (const size of commercialCables) {
-          const baseCapacity = cableCapacityTable[installMethod]?.[size.toString()];
-          if (baseCapacity) {
-              const correctedCapacity = baseCapacity * fct * fca;
-              if (correctedCapacity >= recommendedBreaker) {
-                  cableForBreaker = size;
-                  break;
-              }
-          }
-        }
-        if (!cableForBreaker) {
-            alert(`Nenhum cabo suporta a corrente do disjuntor de ${recommendedBreaker}A com os fatores de correção aplicados.`);
-            return;
-        }
-
+        let cableForBreaker = commercialCables.find(size => {
+            const baseCapacity = cableCapacityTable[installMethod]?.[size.toString()];
+            return baseCapacity && (baseCapacity * fct * fca) >= recommendedBreaker;
+        });
+        if (!cableForBreaker) { alert(`Nenhum cabo suporta a corrente do disjuntor de ${recommendedBreaker}A com os fatores de correção aplicados.`); return; }
         const MAX_VOLTAGE_DROP = 4;
         const COPPER_RESISTIVITY = 0.0178;
         let cableForVoltageDrop = null;
         let finalVoltageDrop = 0;
         for (const size of commercialCables) {
-            let voltageDrop = (circuitType === 'mono') ? 
-                (200 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage) : 
-                (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage);
-
+            let voltageDrop = (circuitType === 'mono') ? (200 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage) : (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (size * voltage);
             if (voltageDrop <= MAX_VOLTAGE_DROP) {
                 cableForVoltageDrop = size;
                 const finalCableCheckSize = Math.max(cableForBreaker, cableForVoltageDrop);
-                finalVoltageDrop = (circuitType === 'mono') ?
-                   (200 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage) :
-                   (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage);
+                finalVoltageDrop = (circuitType === 'mono') ? (200 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage) : (173.2 * COPPER_RESISTIVITY * length * designCurrent) / (finalCableCheckSize * voltage);
                 break;
             }
         }
-         if (!cableForVoltageDrop) {
-            alert("Nenhum cabo atende ao critério de queda de tensão.");
-            return;
-        }
-        
+        if (!cableForVoltageDrop) { alert("Nenhum cabo atende ao critério de queda de tensão."); return; }
         const finalCableSize = Math.max(cableForBreaker, cableForVoltageDrop);
         const baseFinalCapacity = cableCapacityTable[installMethod][finalCableSize.toString()];
         const finalCableCapacity = baseFinalCapacity * fct * fca;
-        
         document.getElementById('breaker-result').textContent = `${recommendedBreaker} A`;
         document.getElementById('cable-result').textContent = `${finalCableSize} mm²`;
         let justificationText = `Justificativa: Corrente de projeto de ${designCurrent.toFixed(2)}A e queda de tensão de ${finalVoltageDrop.toFixed(2)}%. O disjuntor de ${recommendedBreaker}A protege o circuito (In ≥ Ib). O cabo de ${finalCableSize}mm² tem capacidade de ${finalCableCapacity.toFixed(2)}A nestas condições (Iz corrigida), sendo protegido pelo disjuntor (In ≤ Iz).`;
-        if (fct !== 1.0 || fca !== 1.0) {
-            justificationText += ` Fatores de Correção aplicados: Temp=${fct}, Agrup=${fca}.`
-        }
+        if (fct !== 1.0 || fca !== 1.0) { justificationText += ` Fatores de Correção aplicados: Temp=${fct}, Agrup=${fca}.` }
         document.getElementById('justification').textContent = justificationText;
-        
         const tableBody = document.getElementById('context-table-body');
         tableBody.innerHTML = '';
-        const installMethodDescription = document.querySelector(`#install-method-pro option[value="${installMethod}"]`)?.textContent || "Padrão";
+        const installMethodDescription = document.querySelector(`#install-method-pro option[value="${installMethod}"]`)?.textContent || "Padrão (Ar Livre)";
         document.getElementById('results-footer').textContent = `*Capacidade de corrente (Iz) corrigida para ${temperature}°C, ${groupedCircuits} circuito(s) agrupado(s) e método ${installMethod}.`;
-
         commercialCables.forEach(size => {
             const baseCapacity = cableCapacityTable[installMethod]?.[size.toString()];
             const correctedCapacity = baseCapacity ? (baseCapacity * fct * fca).toFixed(2) : 'N/A';
             const row = document.createElement('tr');
-            if (size === finalCableSize) {
-                row.classList.add('recommended-row');
-            }
+            if (size === finalCableSize) { row.classList.add('recommended-row'); }
             row.innerHTML = `<td>${size} mm²</td><td>${correctedCapacity} A</td><td>${size === finalCableSize ? '✅' : ''}</td>`;
             tableBody.appendChild(row);
         });
-
         document.getElementById('results-panel').style.display = 'block';
     }
 
+    // --- EVENT LISTENERS PARA OS BOTÕES ---
     const getNumericValueFromText = (elementId) => {
         const el = document.getElementById(elementId);
         if (!el || !el.value) return NaN;
         return parseFloat(el.value.replace(',', '.'));
     };
 
-    document.getElementById('calculate-btn-geral').addEventListener('click', () => {
-        let power = getNumericValueFromText('power-geral');
-        const powerUnit = document.querySelector('input[name="power_unit_geral"]:checked').value;
-        if (powerUnit === 'kW') { power *= 1000; }
+    // ** INÍCIO DA ALTERAÇÃO NO JAVASCRIPT **
+    const loadTypeRadiosGeral = document.querySelectorAll('input[name="load_type_geral"]');
+    const powerInputsGeral = document.getElementById('power-inputs-geral');
+    const currentInputsGeral = document.getElementById('current-inputs-geral');
+    loadTypeRadiosGeral.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'power') {
+                powerInputsGeral.style.display = 'block';
+                currentInputsGeral.style.display = 'none';
+            } else {
+                powerInputsGeral.style.display = 'none';
+                currentInputsGeral.style.display = 'block';
+            }
+        });
+    });
 
+    document.getElementById('calculate-btn-geral').addEventListener('click', () => {
+        const loadType = document.querySelector('input[name="load_type_geral"]:checked').value;
         const params = {
-            power: power,
-            pf: 0.92,
             voltage: parseInt(document.getElementById('voltage-geral').value),
             circuitType: document.getElementById('circuit-type-geral').value,
             length: getNumericValueFromText('length-geral'),
             installMethod: 'A2',
             temperature: 30,
-            groupedCircuits: 1
+            groupedCircuits: 1,
+            pf: 0.92, 
         };
+        if (loadType === 'power') {
+            let power = getNumericValueFromText('power-geral');
+            const powerUnit = document.querySelector('input[name="power_unit_geral"]:checked').value;
+            if (powerUnit === 'kW') { power *= 1000; }
+            params.power = power;
+        } else {
+            params.current = getNumericValueFromText('current-geral');
+        }
         performCalculation(params);
     });
 
+    const loadTypeRadiosPro = document.querySelectorAll('input[name="load_type_pro"]');
+    const powerInputsPro = document.getElementById('power-inputs-pro');
+    const currentInputsPro = document.getElementById('current-inputs-pro');
+    loadTypeRadiosPro.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'power') {
+                powerInputsPro.style.display = 'block';
+                currentInputsPro.style.display = 'none';
+            } else {
+                powerInputsPro.style.display = 'none';
+                currentInputsPro.style.display = 'block';
+            }
+        });
+    });
+
     document.getElementById('calculate-btn-pro').addEventListener('click', () => {
-        let power = getNumericValueFromText('power-pro');
-        const powerUnit = document.querySelector('input[name="power_unit_pro"]:checked').value;
-        if (powerUnit === 'kW') { power *= 1000; }
-        
+        const loadType = document.querySelector('input[name="load_type_pro"]:checked').value;
         const params = {
-            power: power,
-            pf: parseFloat(document.getElementById('power-factor-pro').value),
             voltage: parseInt(document.getElementById('voltage-pro').value),
             circuitType: document.getElementById('circuit-type-pro').value,
             length: getNumericValueFromText('length-pro'),
@@ -550,10 +588,18 @@
             temperature: parseInt(document.getElementById('temperature-pro').value),
             groupedCircuits: parseInt(document.getElementById('grouping-pro').value)
         };
+        if (loadType === 'power') {
+            let power = getNumericValueFromText('power-pro');
+            const powerUnit = document.querySelector('input[name="power_unit_pro"]:checked').value;
+            if (powerUnit === 'kW') { power *= 1000; }
+            params.power = power;
+            params.pf = parseFloat(document.getElementById('power-factor-pro').value);
+        } else {
+            params.current = getNumericValueFromText('current-pro');
+        }
         performCalculation(params);
     });
-    // ** FIM DA ALTERAÇÃO NO JAVASCRIPT **
-
+     // ** FIM DA ALTERAÇÃO NO JAVASCRIPT **
   </script>
 </body>
 </html>
