@@ -23,8 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hidePanels();
         });
     });
-    document.querySelector('.tab-link.active').classList.remove('active'); // Remove a classe do HTML inicial
-    document.querySelector('.tab-link[data-tab="Geral"]').click(); // Clica na aba Geral para inicializar
+    document.querySelector('.tab-link[data-tab="Geral"]').click();
 
     // --- Lógica dos seletores de modo (Potência/Corrente) ---
     function setupLoadTypeToggle(tabPrefix) {
@@ -93,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let designCurrent;
         if (power !== undefined) {
-          if (power <= 0 || pf <= 0) return displayError("A potência e o fator de potência devem ser maiores que zero.");
+          if (power <= 0 || pf <= 0 || pf > 1) return displayError("A potência deve ser > 0 e o Fator de Potência deve ser selecionado.");
           designCurrent = (circuitType === 'mono') ? (power / (voltage * pf)) : (power / (voltage * pf * Math.sqrt(3)));
         } else {
           if (current <= 0) return displayError("A corrente deve ser maior que zero.");
@@ -114,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let cableForVoltageDrop = null;
         for (const size of DADOS.cabosComerciais) {
+            if (capacityTable[installMethod]?.[size.toString()] === undefined) continue;
             const voltageDrop = (circuitType === 'mono') ? (200 * resistivity * length * designCurrent) / (size * voltage) : (173.2 * resistivity * length * designCurrent) / (size * voltage);
             if (voltageDrop <= DADOS.QUEDA_TENSAO_MAXIMA) {
                 cableForVoltageDrop = size;
