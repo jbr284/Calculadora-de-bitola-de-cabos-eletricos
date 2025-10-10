@@ -1,0 +1,54 @@
+:root {
+  --primary-color: #0d6efd; --primary-hover-color: #0b5ed7; --success-color: #198754; --error-color: #dc3545;
+  --light-gray: #f8f9fa; --medium-gray: #e9ecef; --border-color: #dee2e6; --dark-text: #212529; --light-text: #6c757d;
+}
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; margin: 0; padding: 20px; background-color: var(--medium-gray); color: var(--dark-text); }
+#app { max-width: 800px; margin: 30px auto; padding: 30px; background-color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+h1 { text-align: center; color: var(--dark-text); font-weight: 800; font-size: 2.2em; letter-spacing: -1px; margin-top: 0; }
+h2 { text-align: center; color: var(--primary-color); font-weight: 700; font-size: 1.8em; border-bottom: 2px solid var(--medium-gray); padding-bottom: 15px; margin-bottom: 25px; }
+.tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 25px; }
+.tab-link { background-color: transparent; border: none; outline: none; cursor: pointer; padding: 14px 20px; font-size: 1.1em; font-weight: 600; color: var(--light-text); border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.2s; }
+.tab-link:hover { color: var(--primary-color); }
+.tab-link.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-explanation { background-color: var(--light-gray); padding: 15px; margin-bottom: 25px; border-radius: 8px; border-left: 4px solid var(--primary-color); font-size: 0.9em; line-height: 1.6; }
+.form-section { padding: 25px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; }
+.form-group { margin-bottom: 20px; } .form-group:last-child { margin-bottom: 0; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9em; color: var(--light-text); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 1em; font-family: 'Inter', sans-serif; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25); }
+.input-group { display: flex; gap: 15px; align-items: flex-end; } .input-group > div { flex: 1; }
+.radio-group-power { display: flex; align-items: center; gap: 15px; padding-bottom: 12px; padding-left: 5px; }
+.radio-group-power label { margin-bottom: 0; font-weight: normal; text-transform: none; color: var(--dark-text); }
+.radio-group-power input[type="radio"] { margin-right: 5px; transform: scale(1.1); }
+.radio-group-horizontal { display: flex; justify-content: flex-start; gap: 30px; align-items: center; background-color: var(--light-gray); padding: 15px; border-radius: 6px; }
+.radio-group-horizontal label { font-weight: 600; font-size: 1em; margin-left: 8px; cursor: pointer; color: var(--dark-text); text-transform: none; letter-spacing: 0; }
+.radio-group-horizontal div { display: flex; align-items: center; }
+.radio-group-horizontal input[type="radio"] { transform: scale(1.2); }
+.button-group { display: flex; gap: 15px; margin-top: 20px; }
+.calculate-btn { flex: 3; padding: 15px; font-size: 1.2em; font-weight: 700; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+.calculate-btn:hover { background-color: var(--primary-hover-color); }
+.reset-btn { flex: 1; padding: 15px; font-size: 1.2em; font-weight: 700; background-color: var(--light-text); color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+.reset-btn:hover { background-color: #5c6670; }
+.tooltip { cursor: help; font-weight: bold; color: var(--primary-color); margin-left: 5px; border-bottom: 1px dotted; }
+#results-panel, #error-panel { margin-top: 30px; padding: 25px; border-radius: 8px; display: none; }
+#error-panel { background-color: var(--error-color); color: white; font-weight: 600; text-align: center; }
+#results-panel { background-color: var(--light-gray); }
+.result-item-label { font-weight: 600; color: var(--light-text); text-transform: uppercase; font-size: 0.9em; }
+.result-item-value { font-size: 3em; font-weight: 800; line-height: 1.1; }
+.result-item-value.breaker { color: var(--primary-color); }
+.result-item-value.cable { color: var(--success-color); }
+.justification { font-style: italic; text-align: center; margin: 25px auto; line-height: 1.6; }
+#context-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+#context-table th, #context-table td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
+#context-table th { background-color: #e9ecef; }
+#context-table .recommended-row { background-color: #d1e7dd; font-weight: 700; }
+#results-footer { text-align: center; display: block; margin-top: 15px; font-size: 0.9em; color: var(--light-text); }
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  #app { padding: 15px; margin: 10px auto; }
+  .form-group input, .form-group select, .calculate-btn, .reset-btn { font-size: 16px; }
+  .input-group, .radio-group-horizontal { flex-direction: column; gap: 20px; align-items: stretch; }
+}

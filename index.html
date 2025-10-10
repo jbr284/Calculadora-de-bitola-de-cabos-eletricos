@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Circuitos Elétricos</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+    <h1>Calculadora de Circuitos Elétricos</h1>
+
+    <div class="tabs">
+      <button class="tab-link active" data-tab="Geral">Geral</button>
+      <button class="tab-link" data-tab="Profissional">Profissional</button>
+    </div>
+
+    <div id="Geral" class="tab-content active">
+      <div class="tab-explanation">
+        <strong>Uso Ideal:</strong> Para dimensionar rapidamente o cabo e disjuntor para um <strong>único equipamento</strong>.
+      </div>
+      <form id="form-geral">
+        <div class="form-section">
+          <div class="form-group">
+              <label>Modo de Cálculo</label>
+              <div class="radio-group-horizontal">
+                  <div>
+                      <input type="radio" id="by-power-geral" name="load_type_geral" value="power" checked>
+                      <label for="by-power-geral">Por Potência</label>
+                  </div>
+                  <div>
+                      <input type="radio" id="by-current-geral" name="load_type_geral" value="current">
+                      <label for="by-current-geral">Por Corrente</label>
+                  </div>
+              </div>
+          </div>
+          <div id="power-inputs-geral">
+            <div class="form-group">
+              <label for="power-geral">Potência do Equipamento</label>
+               <div class="input-group">
+                <input type="number" id="power-geral" placeholder="Ex: 2000" step="any">
+                <div class="radio-group-power">
+                    <input type="radio" id="unit-w-geral" name="power_unit_geral" value="W" checked> <label for="unit-w-geral">W</label>
+                    <input type="radio" id="unit-kw-geral" name="power_unit_geral" value="kW"> <label for="unit-kw-geral">kW</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="current-inputs-geral" style="display: none;">
+            <div class="form-group">
+              <label for="current-geral">Corrente do Equipamento (A)</label>
+              <input type="text" id="current-geral" placeholder="Ex: 15.7">
+            </div>
+          </div>
+          <div class="form-group input-group">
+            <div>
+              <label for="voltage-geral">Tensão (V)</label>
+              <select id="voltage-geral">
+                <option value="127">127 V</option> <option value="220">220 V</option> <option value="380">380 V</option>
+              </select>
+            </div>
+            <div>
+              <label for="circuit-type-geral">Tipo de Circuito</label>
+              <select id="circuit-type-geral">
+                <option value="mono">Monofásico</option> <option value="tri">Trifásico</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+              <label for="length-geral">Comprimento do Cabo (m)</label>
+              <input type="text" id="length-geral" placeholder="Ex: 3">
+          </div>
+        </div>
+        <div class="button-group">
+            <button type="button" id="calculate-btn-geral" class="calculate-btn">Calcular</button>
+            <button type="button" id="reset-btn-geral" class="reset-btn">Limpar</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="Profissional" class="tab-content">
+       <div class="tab-explanation">
+        <strong>Uso Ideal:</strong> Para projetar um <strong>circuito elétrico completo</strong> desde o quadro.
+      </div>
+      <form id="form-pro">
+          <div class="form-section">
+            <div class="form-group">
+                <label>Modo de Cálculo</label>
+                <div class="radio-group-horizontal">
+                    <div><input type="radio" id="by-power-pro" name="load_type_pro" value="power" checked><label for="by-power-pro">Por Potência</label></div>
+                    <div><input type="radio" id="by-current-pro" name="load_type_pro" value="current"><label for="by-current-pro">Por Corrente</label></div>
+                </div>
+            </div>
+            <div id="power-inputs-pro">
+              <div class="form-group">
+                <label for="power-pro">Potência Total</label>
+                <div class="input-group">
+                  <input type="number" id="power-pro" placeholder="Ex: 5 ou 5000" step="any">
+                  <div class="radio-group-power">
+                    <input type="radio" id="unit-w-pro" name="power_unit_pro" value="W" checked><label for="unit-w-pro">W</label>
+                    <input type="radio" id="unit-kw-pro" name="power_unit_pro" value="kW"><label for="unit-kw-pro">kW</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="power-factor-pro">Fator de Potência (cos φ) <span class="tooltip" title="Cargas resistivas (chuveiros) têm fator 1.0. Motores e eletrônicos têm fatores menores.">[?]</span></label>
+                <select id="power-factor-pro">
+                    <option value="" disabled selected>Selecione o tipo de carga...</option>
+                    <optgroup label="Cargas Resistivas"><option value="1.00">1.00 - Aquecedores, Chuveiros</option></optgroup>
+                    <optgroup label="Iluminação"><option value="0.95">0.95 - Lâmpadas de LED</option></optgroup>
+                    <optgroup label="Motores de Indução"><option value="0.85">0.85 - Motor em Plena Carga</option></optgroup>
+                </select>
+              </div>
+            </div>
+            <div id="current-inputs-pro" style="display: none;">
+              <div class="form-group">
+                <label for="current-pro">Corrente de Projeto (A)</label>
+                <input type="text" id="current-pro" placeholder="Ex: 22.7">
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-group input-group">
+              <div>
+                <label for="voltage-pro">Tensão (V)</label>
+                <select id="voltage-pro">
+                  <option value="127">127 V</option> <option value="220">220 V</option> <option value="380">380 V</option>
+                </select>
+              </div>
+              <div>
+                <label for="circuit-type-pro">Tipo de Circuito</label>
+                <select id="circuit-type-pro">
+                  <option value="mono">Monofásico</option> <option value="tri">Trifásico</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+                <label for="length-pro">Comprimento do Cabo (m)</label>
+                <input type="text" id="length-pro" placeholder="Ex: 25">
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-group">
+              <label for="install-method-pro">Método de Instalação <span class="tooltip" title="Conforme NBR 5410. 'B1' é o método mais comum para residências (eletroduto embutido em parede).">[?]</span></label>
+              <select id="install-method-pro">
+                <option value="A2">A2 - Cabo sobre parede</option> <option value="B1" selected>B1 - Eletroduto embutido</option> <option value="B2">B2 - Eletroduto aparente</option> <option value="C">C - Eletrocalha</option>
+              </select>
+            </div>
+            <div class="form-group">
+                <label>Material do Condutor</label>
+                <div class="radio-group-horizontal">
+                    <div>
+                        <input type="radio" id="conductor-copper" name="conductor_material" value="cobre" checked>
+                        <label for="conductor-copper">Cobre</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="conductor-aluminum" name="conductor_material" value="aluminio">
+                        <label for="conductor-aluminum">Alumínio</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group input-group">
+                <div>
+                    <label for="temperature-pro">Temp. Ambiente</label>
+                    <select id="temperature-pro">
+                        <option value="30">30°C</option> <option value="25">25°C</option> <option value="35">35°C</option> <option value="40">40°C</option> <option value="45">45°C</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="grouping-pro">Circuitos Agrupados</label>
+                    <select id="grouping-pro">
+                        <option value="1">1</option> <option value="2">2</option> <option value="3">3</option> <option value="4">4</option> <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="button" id="calculate-btn-pro" class="calculate-btn">Calcular</button>
+            <button type="button" id="reset-btn-pro" class="reset-btn">Limpar</button>
+          </div>
+      </form>
+    </div>
+
+    <div id="error-panel" class="error-panel"></div>
+    <div id="results-panel">
+        <h2>Resultado do Dimensionamento</h2>
+        <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div class="result-item"><div class="result-item-label">Disjuntor</div><div id="breaker-result" class="result-item-value breaker"></div></div>
+            <div class="result-item"><div class="result-item-label">Cabo</div><div id="cable-result" class="result-item-value cable"></div></div>
+        </div>
+        <p id="justification" class="justification"></p>
+        <table id="context-table">
+            <thead><tr><th>Seção (mm²)</th><th>Capacidade (Iz)*</th><th>Status</th></tr></thead>
+            <tbody id="context-table-body"></tbody>
+        </table>
+        <small id="results-footer"></small>
+    </div>
+  </div>
+  
+  <script src="dados.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
