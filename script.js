@@ -1,176 +1,262 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Seletores de Elementos Globais ---
-    const selectors = {
-        geral: { form: document.getElementById('form-geral'), btnCalc: 'calculate-btn-geral', btnReset: 'reset-btn-geral' },
-        pro: { form: document.getElementById('form-pro'), btnCalc: 'calculate-btn-pro', btnReset: 'reset-btn-pro' },
-        resultsPanel: document.getElementById('results-panel'),
-        errorPanel: document.getElementById('error-panel'),
-        breakerResult: document.getElementById('breaker-result'),
-        cableResult: document.getElementById('cable-result'),
-        justification: document.getElementById('justification'),
-        contextTableBody: document.getElementById('context-table-body'),
-        resultsFooter: document.getElementById('results-footer')
-    };
-
-    // --- Lógica das Abas ---
-    document.querySelectorAll('.tab-link').forEach(button => {
-        button.addEventListener('click', (e) => {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
-            const tabName = e.currentTarget.dataset.tab;
-            document.getElementById(tabName).classList.add('active');
-            e.currentTarget.classList.add('active');
-            hidePanels();
+    
+    // --- ESTADO E PERSISTÊNCIA ---
+    // Carrega dados salvos quando abre o app
+    function loadSavedState() {
+        document.querySelectorAll('.save-state').forEach(input => {
+            const saved = localStorage.getItem(input.id);
+            if (saved) input.value = saved;
         });
-    });
-    document.querySelector('.tab-link[data-tab="Geral"]').click();
+    }
 
-    // --- Lógica dos seletores de modo (Potência/Corrente) ---
-    function setupLoadTypeToggle(tabPrefix) {
-        document.querySelectorAll(`input[name="load_type_${tabPrefix}"]`).forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const showPower = e.target.value === 'power';
-                document.getElementById(`power-inputs-${tabPrefix}`).style.display = showPower ? 'block' : 'none';
-                document.getElementById(`current-inputs-${tabPrefix}`).style.display = showPower ? 'none' : 'block';
+    // Salva dados sempre que o usuário muda algo
+    function setupPersistence() {
+        document.querySelectorAll('.save-state').forEach(input => {
+            input.addEventListener('change', (e) => {
+                localStorage.setItem(e.target.id, e.target.value);
             });
         });
     }
-    setupLoadTypeToggle('geral');
-    setupLoadTypeToggle('pro');
 
-    // --- Funções de UI ---
-    function hidePanels() {
-        selectors.resultsPanel.style.display = 'none';
-        selectors.errorPanel.style.display = 'none';
-    }
-
-    function displayError(message) {
-        hidePanels();
-        selectors.errorPanel.textContent = message;
-        selectors.errorPanel.style.display = 'block';
-    }
-
-    function displayResults(result) {
-        hidePanels();
-        const { recommendedBreaker, finalCableSize, designCurrent, finalVoltageDrop, fct, fca, temperature, groupedCircuits, installMethod, finalBaseCapacity, conductor } = result;
-
-        selectors.breakerResult.textContent = `${recommendedBreaker} A`;
-        selectors.cableResult.textContent = `${finalCableSize} mm²`;
-
-        const finalCableCapacity = finalBaseCapacity * fct * fca;
-        let justificationText = `Corrente de Projeto: ${designCurrent.toFixed(2)}A. Disjuntor de ${recommendedBreaker}A protege o circuito (In ≥ Ib). O cabo de ${conductor} de ${finalCableSize}mm² tem capacidade de ${finalCableCapacity.toFixed(2)}A (Iz) nestas condições, sendo protegido pelo disjuntor (In ≤ Iz). Queda de Tensão: ${finalVoltageDrop.toFixed(2)}%.`;
-        selectors.justification.textContent = justificationText;
-
-        const tableBody = selectors.contextTableBody;
-        tableBody.innerHTML = '';
-        const capacityTable = conductor === 'cobre' ? DADOS.tabelaCapacidadeCabosCobre : DADOS.tabelaCapacidadeCabosAluminio;
-        DADOS.cabosComerciais.forEach(size => {
-            const baseCapacity = capacityTable[installMethod]?.[size.toString()];
-            if (baseCapacity === undefined && conductor === 'aluminio' && size < 16) return;
-
-            const correctedCapacity = baseCapacity ? (baseCapacity * fct * fca).toFixed(2) : 'N/A';
-            const row = document.createElement('tr');
-            if (size === finalCableSize) row.classList.add('recommended-row');
-            row.innerHTML = `<td>${size} mm²</td><td>${correctedCapacity} A</td><td>${size === finalCableSize ? '✅' : ''}</td>`;
-            tableBody.appendChild(row);
+    // --- LÓGICA DE UI ---
+    // Alternar abas
+    document.querySelectorAll('.tab-link').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+            e.currentTarget.classList.add('active');
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('error-panel').style.display = 'none';
         });
-        
-        selectors.resultsFooter.textContent = `*Iz corrigida para ${temperature}°C, ${groupedCircuits} circuito(s), método ${installMethod}.`;
-        selectors.resultsPanel.style.display = 'block';
+    });
+    document.querySelector('.tab-link[data-tab="Geral"]').click(); // Abre na Geral por padrão
+
+    // Validação de Tensão Trifásica
+    const voltSelect = document.getElementById('voltage-pro');
+    const typeSelect = document.getElementById('circuit-type-pro');
+    const warnBox = document.getElementById('voltage-warning');
+
+    function checkVoltageSanity() {
+        if (typeSelect.value === 'tri' && voltSelect.value === '127') {
+            warnBox.style.display = 'block';
+        } else {
+            warnBox.style.display = 'none';
+        }
+    }
+    voltSelect.addEventListener('change', checkVoltageSanity);
+    typeSelect.addEventListener('change', checkVoltageSanity);
+
+    // Botão de Imprimir
+    document.getElementById('btn-print').addEventListener('click', () => {
+        document.getElementById('print-date').innerText = new Date().toLocaleDateString();
+        window.print();
+    });
+
+    // --- MOTOR DE CÁLCULO ---
+    
+    function displayError(msg) {
+        const p = document.getElementById('error-panel');
+        p.innerText = msg;
+        p.style.display = 'block';
+        document.getElementById('results-panel').style.display = 'none';
     }
 
-    const getNumericValue = (elementId) => parseFloat(document.getElementById(elementId).value.replace(',', '.')) || 0;
+    function calculate(isPro) {
+        document.getElementById('error-panel').style.display = 'none';
 
-    // --- Motor de Cálculo ---
-    function performCalculation(params) {
-        const { power, pf, current, length, voltage, circuitType, installMethod, temperature, groupedCircuits, conductor } = params;
+        // Coleta de dados
+        let power, pf, voltage, phases, length, conductor, insulation, method, temp, grouping;
 
-        if (length <= 0) return displayError("O comprimento do cabo deve ser maior que zero.");
-        
-        const resistivity = conductor === 'cobre' ? DADOS.RESISTIVIDADE_COBRE : DADOS.RESISTIVIDADE_ALUMINIO;
-        const capacityTable = conductor === 'cobre' ? DADOS.tabelaCapacidadeCabosCobre : DADOS.tabelaCapacidadeCabosAluminio;
-
-        let designCurrent;
-        if (power !== undefined) {
-          if (power <= 0 || pf <= 0 || pf > 1) return displayError("A potência deve ser > 0 e o Fator de Potência deve ser selecionado.");
-          designCurrent = (circuitType === 'mono') ? (power / (voltage * pf)) : (power / (voltage * pf * Math.sqrt(3)));
+        if (isPro) {
+            power = parseFloat(document.getElementById('power-pro').value);
+            pf = parseFloat(document.getElementById('power-factor-pro').value);
+            voltage = parseInt(document.getElementById('voltage-pro').value);
+            phases = document.getElementById('circuit-type-pro').value; // mono, bifasico, tri
+            length = parseFloat(document.getElementById('length-pro').value);
+            conductor = document.getElementById('conductor-material-pro').value;
+            insulation = document.getElementById('insulation-pro').value;
+            method = document.getElementById('install-method-pro').value;
+            temp = document.getElementById('temperature-pro').value;
+            grouping = document.getElementById('grouping-pro').value;
         } else {
-          if (current <= 0) return displayError("A corrente deve ser maior que zero.");
-          designCurrent = current;
+            // Modo Geral Simplificado
+            const type = document.querySelector('input[name="load_type_geral"]:checked').value;
+            voltage = parseInt(document.getElementById('voltage-geral').value);
+            phases = 'mono'; // Assume monofásico/bifásico simples
+            length = parseFloat(document.getElementById('length-geral').value);
+            conductor = 'cobre';
+            insulation = 'PVC';
+            method = 'B1';
+            temp = '30';
+            grouping = '1';
+            
+            if (type === 'power') {
+                power = parseFloat(document.getElementById('power-geral').value);
+                pf = 0.95; // Padrão resistivo/misto
+            } else {
+                // Se digitou corrente direto
+                let currentInput = parseFloat(document.getElementById('current-geral').value);
+                if (!currentInput) return displayError("Digite a corrente.");
+                power = currentInput * voltage; // Conversão fictícia para usar a lógica unificada
+                pf = 1.0;
+            }
         }
 
-        const recommendedBreaker = DADOS.disjuntoresComerciais.find(b => b >= designCurrent);
-        if (!recommendedBreaker) return displayError("Nenhuma opção de disjuntor suporta a corrente de projeto calculada.");
+        // Validações Básicas
+        if (!power || power <= 0) return displayError("Informe uma potência válida.");
+        if (!length || length <= 0) return displayError("Informe a distância.");
 
-        const fct = DADOS.fatoresCorrecaoTemp[temperature.toString()] || 1.0;
-        const fca = DADOS.fatoresCorrecaoAgrup[groupedCircuits.toString()] || 1.0;
+        // 1. CÁLCULO DA CORRENTE DE PROJETO (Ib)
+        let ib = 0;
+        // Raiz de 3 = 1.732
+        if (phases === 'tri') {
+            ib = power / (voltage * 1.732 * pf);
+        } else {
+            // Monofásico ou Bifásico (Carga entre fases 220V é tratada como mono no calculo de corrente Ib = P/U)
+            ib = power / (voltage * pf);
+        }
 
-        const cableForBreaker = DADOS.cabosComerciais.find(size => {
-            const baseCapacity = capacityTable[installMethod]?.[size.toString()];
-            return baseCapacity && (baseCapacity * fct * fca) >= recommendedBreaker;
-        });
-        if (!cableForBreaker) return displayError(`Nenhum cabo de ${conductor} suporta o disjuntor de ${recommendedBreaker}A com os fatores de correção aplicados.`);
+        // 2. DEFINIÇÃO DO DISJUNTOR (In)
+        // O disjuntor deve ser maior que Ib
+        const inDisjuntor = DADOS.disjuntoresComerciais.find(d => d >= ib);
+        if (!inDisjuntor) return displayError(`Corrente calculada (${ib.toFixed(1)}A) é muito alta para os disjuntores cadastrados.`);
+
+        // 3. CAPACIDADE DO CABO (Iz)
+        // Seleciona a tabela correta baseada no material e isolação
+        let tabelaAlvo;
+        if (conductor === 'cobre') {
+            tabelaAlvo = (insulation === 'PVC') ? DADOS.tabelaCobrePVC : DADOS.tabelaCobreHEPR;
+        } else {
+            tabelaAlvo = (insulation === 'PVC') ? DADOS.tabelaAluminioPVC : DADOS.tabelaCobreHEPR; // Fallback ou adicionar tabela AlumHEPR se quiser
+        }
+
+        // Fatores de Correção
+        let fct, fca;
+        if (insulation === 'PVC') {
+            fct = DADOS.fatoresCorrecaoTempPVC[temp] || 1.0;
+        } else {
+            fct = DADOS.fatoresCorrecaoTempHEPR[temp] || 1.0;
+        }
+        fca = DADOS.fatoresCorrecaoAgrup[grouping] || 1.0;
+
+        const fatorTotal = fct * fca;
+
+        // Procura cabo que aguente o DISJUNTOR (Critério: Iz_corrigida >= In)
+        // Iz_corrigida = Iz_tabela * Fatores
         
-        let cableForVoltageDrop = null;
-        for (const size of DADOS.cabosComerciais) {
-            if (capacityTable[installMethod]?.[size.toString()] === undefined) continue;
-            const voltageDrop = (circuitType === 'mono') ? (200 * resistivity * length * designCurrent) / (size * voltage) : (173.2 * resistivity * length * designCurrent) / (size * voltage);
-            if (voltageDrop <= DADOS.QUEDA_TENSAO_MAXIMA) {
-                cableForVoltageDrop = size;
+        let caboPorCorrente = null;
+        let capacidadeTabelaCorrente = 0;
+
+        for (let bitola of DADOS.cabosComerciais) {
+            let capacidadeBase = tabelaAlvo[method][bitola.toString()];
+            if (!capacidadeBase) continue;
+
+            let capacidadeReal = capacidadeBase * fatorTotal;
+            if (capacidadeReal >= inDisjuntor) {
+                caboPorCorrente = bitola;
+                capacidadeTabelaCorrente = capacidadeBase;
                 break;
             }
         }
-        if (!cableForVoltageDrop) return displayError("Nenhum cabo atende ao critério de queda de tensão. O comprimento pode ser excessivo.");
 
-        const finalCableSize = Math.max(cableForBreaker, cableForVoltageDrop);
-        const finalBaseCapacity = capacityTable[installMethod]?.[finalCableSize.toString()];
-        if(!finalBaseCapacity) return displayError(`Seção de cabo de ${finalCableSize}mm² não encontrada para o método de instalação selecionado.`);
+        if (!caboPorCorrente) return displayError("Nenhum cabo suporta esta corrente nessas condições de instalação.");
 
-        const finalVoltageDrop = (circuitType === 'mono') ? (200 * resistivity * length * designCurrent) / (finalCableSize * voltage) : (173.2 * resistivity * length * designCurrent) / (finalCableSize * voltage);
+        // 4. CÁLCULO DA QUEDA DE TENSÃO
+        // Resistividade dinâmica (cabo quente)
+        let keyRho = `${conductor}_${insulation}`;
+        let rho = DADOS.RESISTIVIDADE[keyRho] || 0.0224;
+
+        let caboFinal = caboPorCorrente;
+        let quedaPercent = 0;
+        let encontrou = false;
+
+        // Itera a partir do cabo definido pela corrente para ver se atende queda de tensão
+        let indexInicio = DADOS.cabosComerciais.indexOf(caboPorCorrente);
         
-        displayResults({ recommendedBreaker, finalCableSize, designCurrent, finalVoltageDrop, fct, fca, temperature, groupedCircuits, installMethod, finalBaseCapacity, conductor });
+        for (let i = indexInicio; i < DADOS.cabosComerciais.length; i++) {
+            let s = DADOS.cabosComerciais[i];
+            
+            // Fórmula: dU% = (k * rho * L * I) / (S * V) * 100
+            // k = 200 (mono/bifasico) ou 173.2 (trifasico)
+            let k = (phases === 'tri') ? 173.2 : 200;
+            
+            let queda = (k * rho * length * ib) / (s * voltage);
+            
+            if (queda <= DADOS.QUEDA_TENSAO_MAXIMA) {
+                caboFinal = s;
+                quedaPercent = queda;
+                encontrou = true;
+                break;
+            }
+        }
+
+        if (!encontrou) return displayError("Distância muito longa. Queda de tensão excessiva mesmo com cabos grossos.");
+
+        // --- RENDERIZA RESULTADOS ---
+        document.getElementById('breaker-result').innerText = inDisjuntor + " A";
+        document.getElementById('cable-result').innerText = caboFinal + " mm²";
+        
+        // Log técnico
+        const log = document.getElementById('calculation-log');
+        log.innerHTML = `
+            <li>Corrente de Projeto (Ib): <span>${ib.toFixed(2)} A</span></li>
+            <li>Fator Temp (${temp}°C): <span>${fct.toFixed(2)}</span></li>
+            <li>Fator Agrupamento (${grouping} circ): <span>${fca.toFixed(2)}</span></li>
+            <li>Fator Total: <span>${fatorTotal.toFixed(2)}</span></li>
+            <li>Critério Queda de Tensão (${length}m): <span>${quedaPercent.toFixed(2)}%</span></li>
+        `;
+
+        // Tabela Contexto
+        const tbody = document.getElementById('context-table-body');
+        tbody.innerHTML = '';
+        
+        // Mostra 2 bitolas abaixo e 3 acima da escolhida para contexto
+        DADOS.cabosComerciais.forEach(bitola => {
+            let capBase = tabelaAlvo[method][bitola.toString()];
+            if(!capBase) return;
+            let capReal = capBase * fatorTotal;
+            
+            let status = '';
+            let rowClass = '';
+
+            if (bitola === caboFinal) {
+                status = '✅ IDEAL';
+                rowClass = 'recommended-row';
+            } else if (bitola < caboFinal) {
+                if (capReal < inDisjuntor) status = '⚠️ Fraco (Corrente)';
+                else status = '⚠️ Fraco (Queda Tensão)';
+            } else {
+                status = '🆗 Superdimensionado';
+            }
+
+            // Só desenha se estiver perto da escolha (para não ficar tabela gigante)
+            if (Math.abs(DADOS.cabosComerciais.indexOf(bitola) - DADOS.cabosComerciais.indexOf(caboFinal)) <= 2 || bitola === caboFinal) {
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${bitola} mm²</td>
+                        <td>${capReal.toFixed(1)} A</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        document.getElementById('results-panel').style.display = 'block';
+        // Scroll suave até o resultado
+        document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // --- Event Listeners ---
-    document.getElementById(selectors.geral.btnCalc).addEventListener('click', () => {
-        const loadType = document.querySelector('input[name="load_type_geral"]:checked').value;
-        const params = {
-            voltage: parseInt(document.getElementById('voltage-geral').value),
-            circuitType: document.getElementById('circuit-type-geral').value,
-            length: getNumericValue('length-geral'),
-            installMethod: 'B1', temperature: 30, groupedCircuits: 1, conductor: 'cobre', pf: 0.92, 
-        };
-        if (loadType === 'power') {
-            let power = getNumericValue('power-geral');
-            if (document.querySelector('input[name="power_unit_geral"]:checked').value === 'kW') power *= 1000;
-            params.power = power;
-        } else {
-            params.current = getNumericValue('current-geral');
-        }
-        performCalculation(params);
-    });
-    document.getElementById(selectors.geral.btnReset).addEventListener('click', () => { selectors.geral.form.reset(); hidePanels(); });
+    // Eventos de clique
+    document.getElementById('calculate-btn-geral').addEventListener('click', () => calculate(false));
+    document.getElementById('calculate-btn-pro').addEventListener('click', () => calculate(true));
 
-    document.getElementById(selectors.pro.btnCalc).addEventListener('click', () => {
-        const loadType = document.querySelector('input[name="load_type_pro"]:checked').value;
-        const params = {
-            voltage: parseInt(document.getElementById('voltage-pro').value),
-            circuitType: document.getElementById('circuit-type-pro').value,
-            length: getNumericValue('length-pro'),
-            installMethod: document.getElementById('install-method-pro').value,
-            temperature: parseInt(document.getElementById('temperature-pro').value),
-            groupedCircuits: parseInt(document.getElementById('grouping-pro').value),
-            conductor: document.querySelector('input[name="conductor_material"]:checked').value
-        };
-        if (loadType === 'power') {
-            let power = getNumericValue('power-pro');
-            if (document.querySelector('input[name="power_unit_pro"]:checked').value === 'kW') power *= 1000;
-            params.power = power;
-            params.pf = parseFloat(document.getElementById('power-factor-pro').value);
-        } else {
-            params.current = getNumericValue('current-pro');
-        }
-        performCalculation(params);
+    document.getElementById('reset-btn-pro').addEventListener('click', () => {
+        document.getElementById('form-pro').reset();
+        localStorage.clear(); // Limpa dados salvos
     });
-    document.getElementById(selectors.pro.btnReset).addEventListener('click', () => { selectors.pro.form.reset(); hidePanels(); });
+
+    // Inicialização
+    loadSavedState();
+    setupPersistence();
 });
