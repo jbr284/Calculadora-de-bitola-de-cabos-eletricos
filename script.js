@@ -76,9 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
             temp = document.getElementById('temperature-pro').value;
             grouping = document.getElementById('grouping-pro').value;
         } else {
-            // === MODO RÁPIDO (Atualizado) ===
+            // === MODO RÁPIDO ===
             let rawPower = parseFloat(document.getElementById('power-geral').value);
-            const unit = document.querySelector('input[name="power_unit_geral"]:checked').value;
+            
+            // MUDANÇA: Agora pegamos o valor do SELECT, não do radio
+            const unit = document.getElementById('power-unit-geral').value;
             
             // Conversão de Unidade (kW -> W)
             if (unit === 'kW') {
@@ -92,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             length = parseFloat(document.getElementById('length-geral').value);
             
             // Padrões do modo rápido
-            pf = 0.95; // Fator de potência médio seguro
+            pf = 0.95; 
             conductor = 'cobre';
             insulation = 'PVC';
             method = 'B1';
@@ -106,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. CÁLCULO DA CORRENTE (Ib)
         let ib = 0;
-        // Se for Trifásico (tanto no Pro quanto no Rápido) usa raiz de 3
         if (phases === 'tri') {
             ib = power / (voltage * 1.732 * pf);
         } else {
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let indexInicio = DADOS.cabosComerciais.indexOf(caboPorCorrente);
         for (let i = indexInicio; i < DADOS.cabosComerciais.length; i++) {
             let s = DADOS.cabosComerciais[i];
-            let k = (phases === 'tri') ? 173.2 : 200; // k=173.2 para trifásico, 200 para mono
+            let k = (phases === 'tri') ? 173.2 : 200; 
             let queda = (k * rho * length * ib) / (s * voltage);
             
             if (queda <= DADOS.QUEDA_TENSAO_MAXIMA) {
