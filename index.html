@@ -26,35 +26,33 @@
     <h1 class="screen-only">Calculadora Elétrica Pro</h1>
 
     <div class="tabs screen-only">
-      <button class="tab-link" data-tab="Geral">Residencial Rápido</button>
+      <button class="tab-link" data-tab="Geral">Dimensionamento Rápido</button>
       <button class="tab-link" data-tab="Profissional">Profissional / Industrial</button>
     </div>
 
     <div id="Geral" class="tab-content">
       <div class="tab-explanation">
-        <strong>Modo Expresso:</strong> Ideal para dimensionar chuveiros, torneiras e equipamentos isolados. Considera instalação padrão em alvenaria (B1) e cabos PVC.
+        <strong>Modo Rápido:</strong> Para dimensionamento ágil de equipamentos (Fornos, Motores, Chuveiros). Considera padrão B1 (Alvenaria) e cabo PVC.
       </div>
       <form id="form-geral">
         <div class="form-section">
+          
           <div class="form-group">
-              <label>Entrada de Dados</label>
-              <div class="radio-group-horizontal">
-                  <div><input type="radio" id="by-power-geral" name="load_type_geral" value="power" checked><label for="by-power-geral">Potência (W)</label></div>
-                  <div><input type="radio" id="by-current-geral" name="load_type_geral" value="current"><label for="by-current-geral">Corrente (A)</label></div>
-              </div>
-          </div>
-          
-          <div id="power-inputs-geral">
-            <div class="form-group">
-              <label for="power-geral">Potência do Equipamento (Watts)</label>
-              <input type="number" id="power-geral" placeholder="Ex: 5500 (Chuveiro)">
-            </div>
-          </div>
-          
-          <div id="current-inputs-geral" style="display: none;">
-            <div class="form-group">
-              <label for="current-geral">Corrente (Amperes)</label>
-              <input type="number" id="current-geral" placeholder="Ex: 25">
+            <label for="power-geral">Potência do Equipamento</label>
+            <div class="input-group">
+                <div style="flex: 2;">
+                    <input type="number" id="power-geral" placeholder="Ex: 18000 ou 18">
+                </div>
+                <div style="flex: 1; display: flex; align-items: center; justify-content: space-around; background: #fff; border: 1px solid #ced4da; border-radius: 6px; padding: 0 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <input type="radio" id="unit-w" name="power_unit_geral" value="W" checked style="width: auto; margin-right: 5px;">
+                        <label for="unit-w" style="margin:0; cursor:pointer;">W</label>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="radio" id="unit-kw" name="power_unit_geral" value="kW" style="width: auto; margin-right: 5px;">
+                        <label for="unit-kw" style="margin:0; cursor:pointer;">kW</label>
+                    </div>
+                </div>
             </div>
           </div>
 
@@ -62,24 +60,36 @@
             <div>
               <label for="voltage-geral">Tensão (V)</label>
               <select id="voltage-geral">
-                <option value="127">127 V</option> <option value="220" selected>220 V</option>
+                <option value="127">127 V</option> 
+                <option value="220" selected>220 V</option>
+                <option value="380">380 V</option>
+                <option value="440">440 V</option>
               </select>
             </div>
             <div>
-              <label for="length-geral">Distância (m)</label>
-              <input type="number" id="length-geral" placeholder="Ex: 15">
+              <label for="phases-geral">Fases</label>
+              <select id="phases-geral">
+                <option value="mono">Mono/Bifásico</option> 
+                <option value="tri">Trifásico</option>
+              </select>
             </div>
           </div>
+
+          <div class="form-group">
+              <label for="length-geral">Distância (m)</label>
+              <input type="number" id="length-geral" placeholder="Ex: 15">
+          </div>
+
         </div>
         <div class="button-group">
-            <button type="button" id="calculate-btn-geral" class="calculate-btn">CALCULAR</button>
+            <button type="button" id="calculate-btn-geral" class="calculate-btn">CALCULAR RÁPIDO</button>
         </div>
       </form>
     </div>
 
     <div id="Profissional" class="tab-content">
        <div class="tab-explanation">
-        <strong>Modo Projeto:</strong> Controle total sobre fatores de correção, tipo de isolação (PVC/HEPR) e quedas de tensão.
+        <strong>Modo Projeto:</strong> Controle total sobre fatores de correção, tipo de isolação (PVC/HEPR), agrupamento e temperatura.
       </div>
       <form id="form-pro">
           <div class="form-section">
@@ -197,8 +207,7 @@
 
         <div class="tech-details">
             <h3>Memorial de Cálculo</h3>
-            <ul id="calculation-log">
-                </ul>
+            <ul id="calculation-log"></ul>
         </div>
 
         <h3>Análise de Capacidade (Critério de Corrente)</h3>
@@ -208,8 +217,7 @@
         </table>
         
         <div class="footer-note">
-            *Cálculo conforme NBR 5410. Iz (Corrente admissível) corrigida por temperatura e agrupamento. 
-            A responsabilidade final é do engenheiro/projetista.
+            *Cálculo conforme NBR 5410. A responsabilidade final é do engenheiro/projetista.
         </div>
     </div>
   </div>
@@ -218,23 +226,17 @@
   <script src="script.js"></script>
 
   <script>
-    // Registro do PWA e Atualização Automática
     if ('serviceWorker' in navigator) {
-      // Nota: Estamos usando o arquivo sw.js agora
       navigator.serviceWorker.register('./sw.js').then(reg => {
-        
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-               // Nova versão detectada, recarregar a página!
                window.location.reload();
             }
           });
         });
-
       });
-
       let refreshing;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
