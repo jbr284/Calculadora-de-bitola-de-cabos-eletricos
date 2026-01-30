@@ -1,11 +1,12 @@
 {
-  "name": "Calculadora de Circuitos Elétricos",
-  "short_name": "Calc Elétrica",
-  "description": "Calculadora para dimensionamento de cabos e disjuntores conforme NBR 5410.",
-  "start_url": ".",
+  "name": "CalcElétrica Pro",
+  "short_name": "CalcElétrica",
+  "description": "Ferramenta profissional para dimensionamento de circuitos elétricos (NBR 5410).",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#e9ecef",
   "theme_color": "#0d6efd",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
