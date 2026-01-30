@@ -32,7 +32,7 @@
 
     <div id="Geral" class="tab-content">
       <div class="tab-explanation">
-        <strong>Modo Rápido:</strong> Para dimensionamento ágil de equipamentos (Fornos, Motores, Chuveiros). Considera padrão B1 (Alvenaria) e cabo PVC.
+        <strong>Modo Rápido:</strong> Dimensionamento ágil para equipamentos (Fornos, Motores, Chuveiros). Padrão: Cabo PVC em Alvenaria (B1).
       </div>
       <form id="form-geral">
         <div class="form-section">
@@ -43,15 +43,11 @@
                 <div style="flex: 2;">
                     <input type="number" id="power-geral" placeholder="Ex: 18000 ou 18">
                 </div>
-                <div style="flex: 1; display: flex; align-items: center; justify-content: space-around; background: #fff; border: 1px solid #ced4da; border-radius: 6px; padding: 0 10px;">
-                    <div style="display: flex; align-items: center;">
-                        <input type="radio" id="unit-w" name="power_unit_geral" value="W" checked style="width: auto; margin-right: 5px;">
-                        <label for="unit-w" style="margin:0; cursor:pointer;">W</label>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <input type="radio" id="unit-kw" name="power_unit_geral" value="kW" style="width: auto; margin-right: 5px;">
-                        <label for="unit-kw" style="margin:0; cursor:pointer;">kW</label>
-                    </div>
+                <div style="flex: 1;">
+                    <select id="power-unit-geral">
+                        <option value="W" selected>Watts (W)</option>
+                        <option value="kW">Quilowatts (kW)</option>
+                    </select>
                 </div>
             </div>
           </div>
