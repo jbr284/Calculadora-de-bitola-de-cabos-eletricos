@@ -2,7 +2,7 @@
 
 Uma ferramenta web Progressiva (PWA) para dimensionamento de circuitos elétricos de baixa tensão, baseada nos critérios da norma ABNT NBR 5410. A aplicação auxilia engenheiros, técnicos, eletricistas e estudantes a determinar a seção de cabo e o disjuntor de proteção adequados para diferentes tipos de cargas e métodos de instalação.
 
-**[Link para a Aplicação Online](https://SEU-USUARIO.github.io/SEU-REPOSITORIO/)** 👈 (Substitua este link após hospedar)
+**https://jbr284.github.io/Calculadora-de-bitola-de-cabos-eletricos/** 👈 (Substitua este link após hospedar)
 
 ---
 
