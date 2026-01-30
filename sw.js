@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calceletrica-v2'; // <--- Subi para v3 para forçar a atualização!
+const CACHE_NAME = 'calceletrica-v2'; // <--- Subi para v4 para forçar a atualização!
 
 const ASSETS_TO_CACHE = [
   './',
@@ -44,4 +44,5 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
 
