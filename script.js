@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     
+    // --- FATORES DE CONVERSÃO (A MÁGICA) ---
+    const CONVERSAO_POTENCIA = {
+        'W': 1,
+        'kW': 1000,
+        'cv': 735.5, // 1 CV ≈ 735.5 Watts
+        'hp': 745.7  // 1 HP ≈ 745.7 Watts
+    };
+
     // --- ESTADO E PERSISTÊNCIA ---
     function loadSavedState() {
         document.querySelectorAll('.save-state').forEach(input => {
@@ -16,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE UI ---
+    // --- UI ---
     document.querySelectorAll('.tab-link').forEach(button => {
         button.addEventListener('click', (e) => {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -29,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.querySelector('.tab-link[data-tab="Geral"]').click(); 
 
-    // Aviso de Tensão (Pro)
+    // Aviso de Tensão
     const voltSelect = document.getElementById('voltage-pro');
     const typeSelect = document.getElementById('circuit-type-pro');
     const warnBox = document.getElementById('voltage-warning');
@@ -44,14 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
     voltSelect.addEventListener('change', checkVoltageSanity);
     typeSelect.addEventListener('change', checkVoltageSanity);
 
-    // Botão de Imprimir
     document.getElementById('btn-print').addEventListener('click', () => {
         document.getElementById('print-date').innerText = new Date().toLocaleDateString();
         window.print();
     });
 
-    // --- MOTOR DE CÁLCULO ---
-    
+    // --- CÁLCULO ---
     function displayError(msg) {
         const p = document.getElementById('error-panel');
         p.innerText = msg;
@@ -62,10 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculate(isPro) {
         document.getElementById('error-panel').style.display = 'none';
 
-        let power, pf, voltage, phases, length, conductor, insulation, method, temp, grouping;
+        let rawPower, unit, powerInWatts, pf, voltage, phases, length, conductor, insulation, method, temp, grouping;
 
         if (isPro) {
-            power = parseFloat(document.getElementById('power-pro').value);
+            // Entradas Pro
+            rawPower = parseFloat(document.getElementById('power-pro').value);
+            unit = document.getElementById('power-unit-pro').value;
             pf = parseFloat(document.getElementById('power-factor-pro').value);
             voltage = parseInt(document.getElementById('voltage-pro').value);
             phases = document.getElementById('circuit-type-pro').value; 
@@ -76,24 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
             temp = document.getElementById('temperature-pro').value;
             grouping = document.getElementById('grouping-pro').value;
         } else {
-            // === MODO RÁPIDO ===
-            let rawPower = parseFloat(document.getElementById('power-geral').value);
-            
-            // MUDANÇA: Agora pegamos o valor do SELECT, não do radio
-            const unit = document.getElementById('power-unit-geral').value;
-            
-            // Conversão de Unidade (kW -> W)
-            if (unit === 'kW') {
-                power = rawPower * 1000;
-            } else {
-                power = rawPower;
-            }
-
+            // Entradas Geral
+            rawPower = parseFloat(document.getElementById('power-geral').value);
+            unit = document.getElementById('power-unit-geral').value;
             voltage = parseInt(document.getElementById('voltage-geral').value);
-            phases = document.getElementById('phases-geral').value; // 'mono' ou 'tri'
+            phases = document.getElementById('phases-geral').value;
             length = parseFloat(document.getElementById('length-geral').value);
             
-            // Padrões do modo rápido
+            // Padrões Geral
             pf = 0.95; 
             conductor = 'cobre';
             insulation = 'PVC';
@@ -102,38 +100,33 @@ document.addEventListener('DOMContentLoaded', () => {
             grouping = '1';
         }
 
-        // Validações
-        if (!power || power <= 0) return displayError("Informe uma potência válida.");
+        // Validação e Conversão Mágica
+        if (!rawPower || rawPower <= 0) return displayError("Informe uma potência válida.");
         if (!length || length <= 0) return displayError("Informe a distância.");
 
-        // 1. CÁLCULO DA CORRENTE (Ib)
+        // AQUI A MÁGICA ACONTECE: Converte tudo para Watts
+        powerInWatts = rawPower * (CONVERSAO_POTENCIA[unit] || 1);
+
+        // 1. CORRENTE (Ib)
         let ib = 0;
         if (phases === 'tri') {
-            ib = power / (voltage * 1.732 * pf);
+            ib = powerInWatts / (voltage * 1.732 * pf);
         } else {
             // Monofásico ou Bifásico
-            ib = power / (voltage * pf);
+            ib = powerInWatts / (voltage * pf);
         }
 
         // 2. DISJUNTOR (In)
         const inDisjuntor = DADOS.disjuntoresComerciais.find(d => d >= ib);
-        if (!inDisjuntor) return displayError(`Corrente calculada (${ib.toFixed(1)}A) muito alta para os disjuntores cadastrados.`);
+        if (!inDisjuntor) return displayError(`Corrente (${ib.toFixed(1)}A) acima do limite dos disjuntores cadastrados.`);
 
         // 3. CAPACIDADE DO CABO (Iz)
-        let tabelaAlvo;
-        if (conductor === 'cobre') {
-            tabelaAlvo = (insulation === 'PVC') ? DADOS.tabelaCobrePVC : DADOS.tabelaCobreHEPR;
-        } else {
-            tabelaAlvo = (insulation === 'PVC') ? DADOS.tabelaAluminioPVC : DADOS.tabelaCobreHEPR; 
-        }
+        let tabelaAlvo = (conductor === 'cobre') 
+            ? ((insulation === 'PVC') ? DADOS.tabelaCobrePVC : DADOS.tabelaCobreHEPR)
+            : ((insulation === 'PVC') ? DADOS.tabelaAluminioPVC : DADOS.tabelaCobreHEPR); // Fallback simples para Alu
 
-        let fct, fca;
-        if (insulation === 'PVC') {
-            fct = DADOS.fatoresCorrecaoTempPVC[temp] || 1.0;
-        } else {
-            fct = DADOS.fatoresCorrecaoTempHEPR[temp] || 1.0;
-        }
-        fca = DADOS.fatoresCorrecaoAgrup[grouping] || 1.0;
+        let fct = (insulation === 'PVC') ? (DADOS.fatoresCorrecaoTempPVC[temp] || 1.0) : (DADOS.fatoresCorrecaoTempHEPR[temp] || 1.0);
+        let fca = DADOS.fatoresCorrecaoAgrup[grouping] || 1.0;
         const fatorTotal = fct * fca;
 
         let caboPorCorrente = null;
@@ -146,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-        if (!caboPorCorrente) return displayError("Nenhum cabo suporta esta corrente.");
+        if (!caboPorCorrente) return displayError("Nenhum cabo suporta esta corrente nas condições informadas.");
 
         // 4. QUEDA DE TENSÃO
         let keyRho = `${conductor}_${insulation}`;
@@ -169,18 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (!encontrou) return displayError("Distância muito longa. Queda de tensão excessiva.");
+        if (!encontrou) return displayError("Queda de tensão excessiva mesmo com cabos grossos.");
 
-        // --- RENDERIZA RESULTADOS ---
+        // --- EXIBIÇÃO ---
         document.getElementById('breaker-result').innerText = inDisjuntor + " A";
         document.getElementById('cable-result').innerText = caboFinal + " mm²";
         
         const log = document.getElementById('calculation-log');
         log.innerHTML = `
-            <li>Potência: <span>${(power/1000).toFixed(1)} kW</span></li>
-            <li>Sistema: <span>${phases === 'tri' ? 'Trifásico' : 'Monofásico'} (${voltage}V)</span></li>
+            <li>Entrada: <span>${rawPower} ${unit}</span></li>
+            <li>Potência Convertida: <span>${powerInWatts.toFixed(0)} W</span></li>
             <li>Corrente (Ib): <span>${ib.toFixed(2)} A</span></li>
-            <li>Fator Total (Temp/Agrup): <span>${fatorTotal.toFixed(2)}</span></li>
+            <li>Fator Correção: <span>${fatorTotal.toFixed(2)}</span></li>
             <li>Queda de Tensão: <span>${quedaPercent.toFixed(2)}%</span></li>
         `;
 
