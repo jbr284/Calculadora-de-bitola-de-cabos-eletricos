@@ -32,7 +32,7 @@
 
     <div id="Geral" class="tab-content">
       <div class="tab-explanation">
-        <strong>Modo Rápido:</strong> Dimensionamento ágil para equipamentos (Fornos, Motores, Chuveiros). Padrão: Cabo PVC em Alvenaria (B1).
+        <strong>Modo Rápido:</strong> Dimensionamento ágil para equipamentos. Padrão: Cabo PVC em Alvenaria (B1).
       </div>
       <form id="form-geral">
         <div class="form-section">
@@ -41,12 +41,14 @@
             <label for="power-geral">Potência do Equipamento</label>
             <div class="input-group">
                 <div style="flex: 2;">
-                    <input type="number" id="power-geral" placeholder="Ex: 18000 ou 18">
+                    <input type="number" id="power-geral" placeholder="Ex: 10">
                 </div>
-                <div style="flex: 1;">
+                <div style="flex: 1.5;">
                     <select id="power-unit-geral">
-                        <option value="W" selected>Watts (W)</option>
+                        <option value="W">Watts (W)</option>
                         <option value="kW">Quilowatts (kW)</option>
+                        <option value="cv">Cavalos (CV)</option>
+                        <option value="hp">Horsepower (HP)</option>
                     </select>
                 </div>
             </div>
@@ -85,25 +87,33 @@
 
     <div id="Profissional" class="tab-content">
        <div class="tab-explanation">
-        <strong>Modo Projeto:</strong> Controle total sobre fatores de correção, tipo de isolação (PVC/HEPR), agrupamento e temperatura.
+        <strong>Modo Projeto:</strong> Controle total (PVC/HEPR, Agrupamento, CV/HP, etc).
       </div>
       <form id="form-pro">
           <div class="form-section">
             <h3>1. Carga Elétrica</h3>
             <div class="form-group input-group">
                <div style="flex: 2;">
-                 <label for="power-pro">Potência (Watts)</label>
-                 <input type="number" id="power-pro" placeholder="Ex: 7500" class="save-state">
+                 <label for="power-pro">Potência</label>
+                 <input type="number" id="power-pro" placeholder="Ex: 7.5" class="save-state">
                </div>
-               <div style="flex: 1;">
+               <div style="flex: 1.5;"> <label for="power-unit-pro">Unidade</label>
+                 <select id="power-unit-pro" class="save-state">
+                    <option value="W">Watts (W)</option>
+                    <option value="kW">Quilowatts (kW)</option>
+                    <option value="cv" selected>Cavalos (CV)</option>
+                    <option value="hp">Horsepower (HP)</option>
+                 </select>
+               </div>
+            </div>
+            <div class="form-group">
                  <label for="power-factor-pro">Fator de Potência</label>
                  <select id="power-factor-pro" class="save-state">
                     <option value="1.00">1.00 (Resistivo)</option>
                     <option value="0.92">0.92 (Misto/Padrão)</option>
-                    <option value="0.85">0.85 (Motor)</option>
+                    <option value="0.85" selected>0.85 (Motor Típico)</option>
                     <option value="0.80">0.80 (Baixo)</option>
                  </select>
-               </div>
             </div>
           </div>
 
@@ -113,17 +123,18 @@
               <div>
                 <label for="voltage-pro">Tensão (V)</label>
                 <select id="voltage-pro" class="save-state">
-                  <option value="127">127 V</option> <option value="220" selected>220 V</option> <option value="380">380 V</option>
+                  <option value="127">127 V</option> <option value="220" selected>220 V</option> 
+                  <option value="380">380 V</option> <option value="440">440 V</option>
                 </select>
               </div>
               <div>
                 <label for="circuit-type-pro">Fases</label>
                 <select id="circuit-type-pro" class="save-state">
-                  <option value="mono">Monofásico (F+N)</option> <option value="bifasico">Bifásico (F+F)</option> <option value="tri">Trifásico (3F)</option>
+                  <option value="mono">Monofásico</option> <option value="bifasico">Bifásico</option> <option value="tri" selected>Trifásico</option>
                 </select>
               </div>
             </div>
-            <div id="voltage-warning" class="warning-box" style="display:none;">⚠️ Atenção: Redes trifásicas de 127V são raras. Verifique se não é 220V.</div>
+            <div id="voltage-warning" class="warning-box" style="display:none;">⚠️ Atenção: Redes trifásicas de 127V são raras.</div>
             
             <div class="form-group">
                 <label for="length-pro">Comprimento do Circuito (metros)</label>
@@ -141,35 +152,34 @@
                     </select>
                 </div>
                 <div>
-                    <label>Isolação <span class="tooltip" title="PVC: Residencial (70°C). HEPR: Industrial (90°C)">[?]</span></label>
+                    <label>Isolação</label>
                     <select id="insulation-pro" class="save-state">
-                        <option value="PVC">PVC (70°C)</option> <option value="HEPR">HEPR/XLPE (90°C)</option>
+                        <option value="PVC" selected>PVC (70°C)</option> <option value="HEPR">HEPR/XLPE (90°C)</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-              <label for="install-method-pro">Método de Instalação (NBR 5410)</label>
+              <label for="install-method-pro">Método de Instalação</label>
               <select id="install-method-pro" class="save-state">
-                <option value="B1" selected>B1 - Eletroduto em Alvenaria (Padrão)</option>
+                <option value="B1" selected>B1 - Eletroduto em Alvenaria</option>
                 <option value="B2">B2 - Eletroduto Aparente</option>
                 <option value="C">C - Diretamente na parede/Eletrocalha</option>
-                <option value="A2">A2 - Cabo isolado em parede isolante</option>
+                <option value="A2">A2 - Cabo em parede isolante</option>
               </select>
             </div>
             
             <div class="form-group input-group">
                 <div>
-                    <label>Temp. Ambiente</label>
+                    <label>Temp.</label>
                     <select id="temperature-pro" class="save-state">
-                        <option value="30">30°C</option> <option value="35">35°C</option> <option value="40">40°C</option> <option value="45">45°C</option>
+                        <option value="30">30°C</option> <option value="35">35°C</option> <option value="40">40°C</option>
                     </select>
                 </div>
                 <div>
                     <label>Agrupamento</label>
                     <select id="grouping-pro" class="save-state">
-                        <option value="1">1 Circuito</option> <option value="2">2 Circuitos</option> <option value="3" selected>3 Circuitos</option>
-                        <option value="4">4 Circuitos</option> <option value="5">5 Circuitos</option>
+                        <option value="1">1 Circ.</option> <option value="2">2 Circ.</option> <option value="3">3 Circ.</option>
                     </select>
                 </div>
             </div>
@@ -186,17 +196,17 @@
 
     <div id="results-panel">
         <div class="results-header">
-            <h2>Resultado do Dimensionamento</h2>
-            <button id="btn-print" class="screen-only btn-small">📄 Gerar Relatório PDF</button>
+            <h2>Resultado</h2>
+            <button id="btn-print" class="screen-only btn-small">🖨️ Imprimir</button>
         </div>
         
         <div class="summary-box">
             <div class="result-item">
-                <div class="result-item-label">Disjuntor Recomendado</div>
+                <div class="result-item-label">Disjuntor</div>
                 <div id="breaker-result" class="result-item-value breaker">--</div>
             </div>
             <div class="result-item">
-                <div class="result-item-label">Cabo (Seção Mínima)</div>
+                <div class="result-item-label">Cabo (Mínimo)</div>
                 <div id="cable-result" class="result-item-value cable">--</div>
             </div>
         </div>
@@ -206,14 +216,14 @@
             <ul id="calculation-log"></ul>
         </div>
 
-        <h3>Análise de Capacidade (Critério de Corrente)</h3>
+        <h3>Tabela de Capacidade</h3>
         <table id="context-table">
-            <thead><tr><th>Seção (mm²)</th><th>Capacidade Real (Iz)</th><th>Status</th></tr></thead>
+            <thead><tr><th>Seção</th><th>Capacidade</th><th>Status</th></tr></thead>
             <tbody id="context-table-body"></tbody>
         </table>
         
         <div class="footer-note">
-            *Cálculo conforme NBR 5410. A responsabilidade final é do engenheiro/projetista.
+            *Cálculo conforme NBR 5410. A responsabilidade é do profissional.
         </div>
     </div>
   </div>
@@ -232,12 +242,6 @@
             }
           });
         });
-      });
-      let refreshing;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        window.location.reload();
-        refreshing = true;
       });
     }
   </script>
