@@ -1,17 +1,16 @@
-const CACHE_NAME = 'calceletrica-v2'; // <--- Subi para v5 para forçar a atualização!
+const CACHE_NAME = 'calceletrica-v3-motors'; 
 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
-  './script.js', // O cérebro
-  './dados.js',  // As tabelas de engenharia
+  './script.js',
+  './dados.js',
   './manifest.json',
   './icons/icon-192x192.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap'
 ];
 
-// 1. INSTALAÇÃO
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -21,7 +20,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. ATIVAÇÃO (Limpeza de cache velho)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -36,7 +34,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. INTERCEPTAÇÃO (Offline First)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
@@ -44,6 +41,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
-
-
