@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calceletrica-v3-motors'; 
+const CACHE_NAME = 'calceletrica-v4-smart'; 
 
 const ASSETS_TO_CACHE = [
   './',
