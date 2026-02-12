@@ -1,12 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- FATORES DE CONVERSÃO (A MÁGICA) ---
     const CONVERSAO_POTENCIA = {
-        'W': 1,
-        'kW': 1000,
-        'cv': 735.5, // 1 CV ≈ 735.5 Watts
-        'hp': 745.7  // 1 HP ≈ 745.7 Watts
+        'W': 1, 'kW': 1000, 'cv': 735.5, 'hp': 745.7
     };
+
+    // --- CONFIGURAÇÃO DOS TIPOS DE CIRCUITO ---
+    const CIRCUIT_TYPES = {
+        'motor': {
+            fp: 0.85,
+            desc: "Motores Elétricos, Bombas, Compressores, Máquinas. (FP: 0.85 | Cabo PP)",
+            usePP: true,
+            styleClass: 'hint-motor'
+        },
+        'resistivo': {
+            fp: 1.0,
+            desc: "Chuveiros, Fornos, Aquecedores, AirFryer. (FP: 1.0 | Cabo Flexível)",
+            usePP: false, // Pode usar PP, mas o padrão fixo é flexível
+            styleClass: 'hint-resistivo'
+        },
+        'geral': {
+            fp: 0.95,
+            desc: "Tomadas comuns, Eletrodomésticos, Secador, TV. (FP: 0.95 | Cabo Flexível)",
+            usePP: false,
+            styleClass: 'hint-geral'
+        },
+        'eletronico': {
+            fp: 0.90,
+            desc: "Computadores, Servidores, LED, Automação. (FP: 0.90 | Cabo Flexível)",
+            usePP: false,
+            styleClass: 'hint-eletronico'
+        }
+    };
+
+    // --- INTERATIVIDADE DO SELECT INTELIGENTE ---
+    const typeSelect = document.getElementById('circuit-type-geral');
+    const hintBox = document.getElementById('circuit-hint');
+
+    typeSelect.addEventListener('change', () => {
+        const type = typeSelect.value;
+        const config = CIRCUIT_TYPES[type];
+        
+        hintBox.innerText = "💡 " + config.desc;
+        
+        // Remove classes antigas e adiciona a nova para cor
+        hintBox.classList.remove('hint-motor', 'hint-resistivo', 'hint-geral', 'hint-eletronico');
+        hintBox.classList.add(config.styleClass);
+    });
 
     // --- ESTADO E PERSISTÊNCIA ---
     function loadSavedState() {
@@ -39,18 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Aviso de Tensão
     const voltSelect = document.getElementById('voltage-pro');
-    const typeSelect = document.getElementById('circuit-type-pro');
+    const typeSelectPro = document.getElementById('circuit-type-pro');
     const warnBox = document.getElementById('voltage-warning');
 
     function checkVoltageSanity() {
-        if (typeSelect.value === 'tri' && voltSelect.value === '127') {
+        if (typeSelectPro.value === 'tri' && voltSelect.value === '127') {
             warnBox.style.display = 'block';
         } else {
             warnBox.style.display = 'none';
         }
     }
     voltSelect.addEventListener('change', checkVoltageSanity);
-    typeSelect.addEventListener('change', checkVoltageSanity);
+    typeSelectPro.addEventListener('change', checkVoltageSanity);
 
     document.getElementById('btn-print').addEventListener('click', () => {
         document.getElementById('print-date').innerText = new Date().toLocaleDateString();
@@ -69,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('error-panel').style.display = 'none';
 
         let rawPower, unit, powerInWatts, pf, voltage, phases, length, conductor, insulation, method, temp, grouping;
+        let cableTypeName = "Cabo Flexível (750V)"; // Padrão
 
         if (isPro) {
             // Entradas Pro
@@ -84,27 +124,36 @@ document.addEventListener('DOMContentLoaded', () => {
             temp = document.getElementById('temperature-pro').value;
             grouping = document.getElementById('grouping-pro').value;
         } else {
-            // Entradas Geral
+            // Entradas Geral (Inteligente)
+            const circuitType = document.getElementById('circuit-type-geral').value;
+            const config = CIRCUIT_TYPES[circuitType];
+
             rawPower = parseFloat(document.getElementById('power-geral').value);
             unit = document.getElementById('power-unit-geral').value;
             voltage = parseInt(document.getElementById('voltage-geral').value);
             phases = document.getElementById('phases-geral').value;
             length = parseFloat(document.getElementById('length-geral').value);
             
-            // Padrões Geral
-            pf = 0.95; 
+            // Padrões Automáticos
+            pf = config.fp; 
             conductor = 'cobre';
             insulation = 'PVC';
-            method = 'B1';
+            method = 'B1'; // Eletroduto embutido (padrão seguro)
             temp = '30';
             grouping = '1';
+
+            // Lógica do Cabo PP
+            if (config.usePP) {
+                let vias = 3; // Padrão Mono/Bifásico (F+N+T ou F+F+T)
+                if (phases === 'tri') vias = 4; // Trifásico (3F+T)
+                cableTypeName = `Cabo PP ${vias} Vias`;
+            }
         }
 
-        // Validação e Conversão Mágica
+        // Validação
         if (!rawPower || rawPower <= 0) return displayError("Informe uma potência válida.");
         if (!length || length <= 0) return displayError("Informe a distância.");
 
-        // AQUI A MÁGICA ACONTECE: Converte tudo para Watts
         powerInWatts = rawPower * (CONVERSAO_POTENCIA[unit] || 1);
 
         // 1. CORRENTE (Ib)
@@ -112,18 +161,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (phases === 'tri') {
             ib = powerInWatts / (voltage * 1.732 * pf);
         } else {
-            // Monofásico ou Bifásico
             ib = powerInWatts / (voltage * pf);
         }
 
         // 2. DISJUNTOR (In)
         const inDisjuntor = DADOS.disjuntoresComerciais.find(d => d >= ib);
-        if (!inDisjuntor) return displayError(`Corrente (${ib.toFixed(1)}A) acima do limite dos disjuntores cadastrados.`);
+        if (!inDisjuntor) return displayError(`Corrente (${ib.toFixed(1)}A) muito alta.`);
 
         // 3. CAPACIDADE DO CABO (Iz)
         let tabelaAlvo = (conductor === 'cobre') 
             ? ((insulation === 'PVC') ? DADOS.tabelaCobrePVC : DADOS.tabelaCobreHEPR)
-            : ((insulation === 'PVC') ? DADOS.tabelaAluminioPVC : DADOS.tabelaCobreHEPR); // Fallback simples para Alu
+            : ((insulation === 'PVC') ? DADOS.tabelaAluminioPVC : DADOS.tabelaCobreHEPR); 
 
         let fct = (insulation === 'PVC') ? (DADOS.fatoresCorrecaoTempPVC[temp] || 1.0) : (DADOS.fatoresCorrecaoTempHEPR[temp] || 1.0);
         let fca = DADOS.fatoresCorrecaoAgrup[grouping] || 1.0;
@@ -139,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-        if (!caboPorCorrente) return displayError("Nenhum cabo suporta esta corrente nas condições informadas.");
+        if (!caboPorCorrente) return displayError("Nenhum cabo suporta esta corrente.");
 
         // 4. QUEDA DE TENSÃO
         let keyRho = `${conductor}_${insulation}`;
@@ -162,18 +210,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (!encontrou) return displayError("Queda de tensão excessiva mesmo com cabos grossos.");
+        if (!encontrou) return displayError("Queda de tensão excessiva.");
 
         // --- EXIBIÇÃO ---
         document.getElementById('breaker-result').innerText = inDisjuntor + " A";
         document.getElementById('cable-result').innerText = caboFinal + " mm²";
         
+        // Exibe o tipo de cabo calculado (PP ou Flexível)
+        const cableDetailDiv = document.getElementById('cable-type-detail');
+        if (isPro) {
+            cableDetailDiv.innerText = `${conductor === 'cobre' ? 'Cobre' : 'Alumínio'} - ${insulation}`;
+        } else {
+            cableDetailDiv.innerText = cableTypeName;
+        }
+        
         const log = document.getElementById('calculation-log');
         log.innerHTML = `
-            <li>Entrada: <span>${rawPower} ${unit}</span></li>
-            <li>Potência Convertida: <span>${powerInWatts.toFixed(0)} W</span></li>
+            <li>Carga: <span>${rawPower} ${unit}</span></li>
             <li>Corrente (Ib): <span>${ib.toFixed(2)} A</span></li>
-            <li>Fator Correção: <span>${fatorTotal.toFixed(2)}</span></li>
+            <li>Fator Potência: <span>${pf}</span></li>
+            <li>Disjuntor: <span>${inDisjuntor} A</span></li>
             <li>Queda de Tensão: <span>${quedaPercent.toFixed(2)}%</span></li>
         `;
 
