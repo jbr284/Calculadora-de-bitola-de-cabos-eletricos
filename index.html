@@ -26,22 +26,35 @@
     <h1 class="screen-only">Calculadora Elétrica Pro</h1>
 
     <div class="tabs screen-only">
-      <button class="tab-link" data-tab="Geral">Dimensionamento Rápido</button>
-      <button class="tab-link" data-tab="Profissional">Profissional / Industrial</button>
+      <button class="tab-link" data-tab="Geral">Dimensionamento Inteligente</button>
+      <button class="tab-link" data-tab="Profissional">Modo Engenheiro</button>
     </div>
 
     <div id="Geral" class="tab-content">
       <div class="tab-explanation">
-        <strong>Modo Rápido:</strong> Dimensionamento ágil para equipamentos. Padrão: Cabo PVC em Alvenaria (B1).
+        Selecione o <strong>Tipo de Circuito</strong> e o sistema ajustará os fatores técnicos (FP, cabo ideal) automaticamente.
       </div>
       <form id="form-geral">
         <div class="form-section">
           
           <div class="form-group">
-            <label for="power-geral">Potência do Equipamento</label>
+            <label for="circuit-type-geral">Tipo de Circuito / Carga</label>
+            <select id="circuit-type-geral" class="save-state">
+                <option value="motor">⚡ Motores & Indutivos (Força)</option>
+                <option value="resistivo">🔥 Resistivos (Aquecimento)</option>
+                <option value="geral" selected>🏠 Uso Geral (Tomadas TUG)</option>
+                <option value="eletronico">💻 Eletrônicos & LED</option>
+            </select>
+            <div id="circuit-hint" class="hint-box hint-geral">
+                💡 Tomadas comuns, Eletrodomésticos, Secador, TV. (FP: 0.95 | Cabo Flexível)
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="power-geral">Potência</label>
             <div class="input-group">
                 <div style="flex: 2;">
-                    <input type="number" id="power-geral" placeholder="Ex: 10">
+                    <input type="number" id="power-geral" placeholder="Ex: 5000">
                 </div>
                 <div style="flex: 1.5;">
                     <select id="power-unit-geral">
@@ -80,7 +93,7 @@
 
         </div>
         <div class="button-group">
-            <button type="button" id="calculate-btn-geral" class="calculate-btn">CALCULAR RÁPIDO</button>
+            <button type="button" id="calculate-btn-geral" class="calculate-btn">CALCULAR AGORA</button>
         </div>
       </form>
     </div>
@@ -97,7 +110,8 @@
                  <label for="power-pro">Potência</label>
                  <input type="number" id="power-pro" placeholder="Ex: 7.5" class="save-state">
                </div>
-               <div style="flex: 1.5;"> <label for="power-unit-pro">Unidade</label>
+               <div style="flex: 1.5;">
+                 <label for="power-unit-pro">Unidade</label>
                  <select id="power-unit-pro" class="save-state">
                     <option value="W">Watts (W)</option>
                     <option value="kW">Quilowatts (kW)</option>
@@ -206,9 +220,9 @@
                 <div id="breaker-result" class="result-item-value breaker">--</div>
             </div>
             <div class="result-item">
-                <div class="result-item-label">Cabo (Mínimo)</div>
+                <div class="result-item-label">Cabo Recomendado</div>
                 <div id="cable-result" class="result-item-value cable">--</div>
-            </div>
+                <div id="cable-type-detail" style="font-size:0.9rem; color:#666; margin-top:5px;"></div> </div>
         </div>
 
         <div class="tech-details">
