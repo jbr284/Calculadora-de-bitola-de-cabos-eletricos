@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calceletrica-v4-smart'; 
+const CACHE_NAME = 'calceletrica-v5-smart'; 
 
 const ASSETS_TO_CACHE = [
   './',
@@ -41,3 +41,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
