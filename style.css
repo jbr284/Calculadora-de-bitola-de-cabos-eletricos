@@ -238,4 +238,38 @@ th { background-color: var(--header-bg); color: var(--text-main); }
 @media (max-width: 600px) {
     .input-group { flex-direction: column; gap: 5px; }
     .summary-box { flex-direction: column; }
+  /* ESTILOS PARA CAIXA DE DICAS (NOVO) */
+.hint-box {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border-left: 4px solid #ccc;
+    transition: all 0.3s ease;
 }
+
+.hint-motor {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffc107;
+}
+
+.hint-resistivo {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #dc3545;
+}
+
+.hint-geral {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border-color: #198754;
+}
+
+.hint-eletronico {
+    background-color: #cff4fc;
+    color: #055160;
+    border-color: #0dcaf0;
+}
+}
+
